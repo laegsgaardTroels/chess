@@ -25,9 +25,10 @@ class Board:
     @board.setter
     def board(self, value):
 
-        for row in value:
-            for piece in row:
+        for i, row in enumerate(value):
+            for j, piece in enumerate(row):
                 piece.board = self
+                piece.position = (i, j)
 
         if isinstance(value, list):
             value = np.array(value)
@@ -38,21 +39,16 @@ class Board:
 
         self._board = value
 
-    @board.deleter
-    def board(self):
-        del self._board
-
     def __getitem__(self, position):
-        if any(idx < 0 for idx in position):
-            return None
-        try:
+        i, j = position
+        if 0 <= i < 8 and 0 <= j < 8:
             return self.board[position]
-        except IndexError:
-            return None
+        return None
 
     def __setitem__(self, position, piece):
         self.board[position] = piece
         piece.board = self
+        piece.position = position
 
     def __len__(self):
         return 8
@@ -61,7 +57,7 @@ class Board:
         if isinstance(other, Piece):
             return self.board == other
         elif isinstance(other, Board):
-            return bool(self.board == other.board)
+            return all(self.board == other.board)
         return False
 
     def __iter__(self):
@@ -113,22 +109,3 @@ class Board:
                 if (piece.color == color) & isinstance(piece, King):
                     return piece
         raise ValueError(f'Missing king of color {color}')
-
-
-def unicode_to_board(u):
-    """Convert unicode chess board to a chess board object."""
-    board = []
-    for idx, line in enumerate(u.splitlines()):
-        if idx in [0, 1, 6, 7]:
-            line = line.replace(u' ', u'')
-        board.append(
-            list(
-                map(
-                    lambda u: UNCODE_STR_TO_PIECE.get(u),
-                    line
-                )
-            )
-        )
-        if idx > 7:
-            raise ValueError("Too many lines...")
-    return Board(board)

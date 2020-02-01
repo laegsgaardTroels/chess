@@ -4,27 +4,10 @@ import numpy as np
 class Piece:
     """An abstract class for a piece on the board."""
 
-    def __init__(self, color=None, board=None):
+    def __init__(self, color=None, board=None, position=None):
         self.color = color
         self.board = board
-
-    @property
-    def position(self):
-        i, j = np.where(self.board == self)
-        return int(i), int(j)
-
-    @position.setter
-    def position(self, value):
-        self.board.move(
-            from_=self.position,
-            to=value
-        )
-
-    def move(self, value):
-        self.board.move(
-            from_=self.position,
-            to=value
-        )
+        self.position = position
 
     def is_opponent(self, other):
         """Return the color of the opponent."""
@@ -218,20 +201,3 @@ class Queen(Piece):
                         moves.append(new_position)
                         break
         return moves
-
-
-UNCODE_STR_TO_PIECE = {
-    u'♔': King('white'),
-    u'♚': King('black'),
-    u'♕': Queen('white'),
-    u'♛': Queen('black'),
-    u'♘': Horse('white'),
-    u'♞': Horse('black'),
-    u'♗': Bishop('white'),
-    u'♝': Bishop('black'),
-    u'♖': Tower('black'),
-    u'♜': Tower('black'),
-    u'♙': Pawn('white'),
-    u'♟': Pawn('black'),
-    u' ': Empty(),
-}
