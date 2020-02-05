@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class Agent:
 
-    def __init__(self, color='black', depth=3):
+    def __init__(self, color='black', depth=4):
         self.color = color
         self.depth = depth
         self.piece_value = {
@@ -62,17 +62,16 @@ class Agent:
             alpha=-np.inf, beta=np.inf, maximizing_player=True,
             str_log=None,
         ):
+
         # Used for logging in root node.
         str_log = self.combine(str_log, str(node))
 
         # The algorithm.
         moves = node.moves(node.current_color)
         if depth == 0 or len(moves) == 0:
-            state_value = self.state_value(node)
-            logger.debug(f"\n\nstate value: {state_value}.\n{str_log}\n")
-            return state_value
-
-        if maximizing_player:
+            value = self.state_value(node)
+            logger.debug(f"\n\nstate value: {value}.\n{str_log}\n")
+        elif maximizing_player:
             value = - np.inf
             for move in moves:
                 new_node = node.simulate_move(*move)
@@ -80,7 +79,6 @@ class Agent:
                 alpha = max(alpha, value)
                 if alpha >= beta:
                     break
-            return value
         else:
             value = np.inf
             for move in moves:
@@ -89,7 +87,8 @@ class Agent:
                 beta = min(beta, value)
                 if alpha >= beta:
                     break
-            return value
+
+        return value
 
     def combine(self, old_log, new_log):
         if old_log is None:
