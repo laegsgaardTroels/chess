@@ -1,11 +1,17 @@
+from chess.utils import chess_notation
+
 import json
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class Agent:
 
-    def __init__(self, color='black'):
+    def __init__(self, color='black', depth=3):
         self.color = color
-        self.depth = 4
+        self.depth = depth
         self.piece_value = {
             'Empty': 0,
             'Pawn': 1,
@@ -35,29 +41,42 @@ class Agent:
         max_value = - np.inf
         for move in game.moves(self.color):
             root_node = game.simulate_move(*move)
-            value = self.alphabeta(root_node, self.depth - 1, False)
+            value = self.alphabeta(
+                node=root_node,
+                depth=self.depth - 1,
+                maximizing_player=False
+            )
             if value >= max_value:
                 best_move = move
                 max_value = value
 
             # Save for debugging.
-            self.last_action_value[str(move)] = str(value)
-
+            self.last_action_value[' -> '.join(chess_notation(move))] = value
+            logger.debug(f"{' -> '.join(chess_notation(move))}. value: {value}.\n")
+        logger.info(f"\n\n{self.__str__()}\n")
         return best_move
 
     def alphabeta(
             self,
             node, depth,
-            alpha=-np.inf, beta=np.inf, maximizing_player=True
+            alpha=-np.inf, beta=np.inf, maximizing_player=True,
+            str_log=None,
         ):
+        # Used for logging in root node.
+        str_log = self.combine(str_log, str(node))
+
+        # The algorithm.
         moves = node.moves(node.current_color)
         if depth == 0 or len(moves) == 0:
-            return self.state_value(node)
+            state_value = self.state_value(node)
+            logger.debug(f"\n\nstate value: {state_value}.\n{str_log}\n")
+            return state_value
+
         if maximizing_player:
             value = - np.inf
             for move in moves:
                 new_node = node.simulate_move(*move)
-                value = max(value, self.alphabeta(new_node, depth - 1, alpha, beta, False))
+                value = max(value, self.alphabeta(new_node, depth - 1, alpha, beta, False, str_log))
                 alpha = max(alpha, value)
                 if alpha >= beta:
                     break
@@ -66,8 +85,16 @@ class Agent:
             value = np.inf
             for move in moves:
                 new_node = node.simulate_move(*move)
-                value = min(value, self.alphabeta(new_node, depth - 1, alpha, beta, True))
+                value = min(value, self.alphabeta(new_node, depth - 1, alpha, beta, True, str_log))
                 beta = min(beta, value)
                 if alpha >= beta:
                     break
             return value
+
+    def combine(self, old_log, new_log):
+        if old_log is None:
+            return new_log
+        return '\n'.join(map(
+            lambda old_new: '    '.join(old_new),
+            zip(old_log.splitlines(), new_log.splitlines())
+        ))

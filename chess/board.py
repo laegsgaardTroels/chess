@@ -17,6 +17,22 @@ class Board:
         else:
             self.board = board
 
+    def __deepcopy__(self, memo=None):
+        new_board = []
+        for i, row in enumerate(self.board):
+            new_row = []
+            for j, piece in enumerate(row):
+                new_piece = piece.__class__(
+                    color=piece.color,
+                    board=new_board,
+                    position=piece.position
+                )
+
+                new_row.append(new_piece)
+            new_board.append(new_row)
+        new_board = Board(board=new_board)
+        return new_board
+
     @property
     def board(self):
         """Is the board of the correct type etc."""
@@ -57,7 +73,7 @@ class Board:
         if isinstance(other, Piece):
             return self.board == other
         elif isinstance(other, Board):
-            return all(self.board == other.board)
+            return np.all(self.board == other.board)
         return False
 
     def __iter__(self):
@@ -71,7 +87,7 @@ class Board:
         return '\n'.join(lines)
 
     def copy(self):
-        return Board(copy.deepcopy(self.board))
+        return self.__deepcopy__(None)
 
     def _create_board(self):
         """Create a chess board."""
