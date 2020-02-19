@@ -8,7 +8,7 @@ SIMULATIONS = 10
 
 @pytest.mark.parametrize("idx", range(SIMULATIONS))
 def test_simulation(idx):
-    """Test that a simulation doesn't fail."""
+    """Test that a randomly simulated game doesn't fail."""
     game = Game()
     while not (
         game.is_checkmate(game.current_color)

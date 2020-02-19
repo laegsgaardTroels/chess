@@ -103,7 +103,11 @@ class Game:
             return from_to[color]
 
     def play(self, agent=None):
-        while not (self.is_checkmate(self.current_color) or self.is_draw()):
+        while not (
+            game.is_checkmate(game.current_color)
+            or game.is_draw()
+            or game.is_check(game.opponent_color(game.current_color))
+        ):
             print(self)
             print()
             if self.current_color == 'black':
