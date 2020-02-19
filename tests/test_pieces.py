@@ -1,5 +1,13 @@
 from chess import Board
-from chess.pieces import *
+
+from chess.pieces import Tower
+from chess.pieces import Horse
+from chess.pieces import Bishop
+from chess.pieces import King
+from chess.pieces import Queen
+from chess.pieces import Pawn
+from chess.pieces import Empty
+
 
 import pytest
 

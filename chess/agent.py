@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class Agent:
 
-    def __init__(self, color='black', depth=4):
+    def __init__(self, color='black', depth=3):
         self.color = color
         self.depth = depth
         self.piece_value = {
@@ -52,7 +52,9 @@ class Agent:
 
             # Save for debugging.
             self.last_action_value[' -> '.join(chess_notation(move))] = value
-            logger.debug(f"{' -> '.join(chess_notation(move))}. value: {value}.\n")
+            logger.debug(
+                f"{' -> '.join(chess_notation(move))}. value: {value}.\n"
+            )
         logger.info(f"\n\n{self.__str__()}\n")
         return best_move
 

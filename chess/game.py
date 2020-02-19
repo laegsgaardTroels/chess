@@ -1,11 +1,12 @@
 from chess.board import Board
 from chess.agent import Agent
-from chess.pieces import *
+
+from chess.pieces import Empty
+
 from chess.utils import chess_notation
 
 import copy
 import logging
-from itertools import chain
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +131,11 @@ class Game:
                     print('Not this players turn...\n')
                     continue
             self.move(from_, to)
+
+            if self.is_checkmate(self.current_color):
+                print(f'{self.current_color} is check')
+                print()
+
             logger.info(
                 f"\n\n{self.opponent_color()} moved "
                 f"{' -> '.join(chess_notation((from_, to)))}."

@@ -1,4 +1,4 @@
-.PHONY: clean lint tests 
+.PHONY: clean lint tests game
 
 #################################################################################
 # GLOBALS                                                                       #
@@ -23,6 +23,10 @@ lint:
 ## Run tests
 tests:
 	${PYTHON_INTERPRETER} -m pytest
+
+## Create a chess game
+game:
+	${PYTHON_INTERPRETER} -m chess.game
 
 
 #################################################################################
