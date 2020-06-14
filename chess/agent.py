@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class Agent:
 
-    def __init__(self, color='black', depth=3):
+    def __init__(self, color='black', depth=2):
         self.color = color
         self.depth = depth
         self.piece_value = {
@@ -65,31 +65,26 @@ class Agent:
             str_log=None,
         ):
 
-        # Used for logging in root node.
-        str_log = self.combine(str_log, str(node))
-
         # The algorithm.
-        moves = node.moves(node.current_color)
-        if depth == 0 or len(moves) == 0:
+        if depth == 0 :
             value = self.state_value(node)
-            logger.debug(f"\n\nstate value: {value}.\n{str_log}\n")
-        elif maximizing_player:
-            value = - np.inf
-            for move in moves:
-                new_node = node.simulate_move(*move)
-                value = max(value, self.alphabeta(new_node, depth - 1, alpha, beta, False, str_log))
-                alpha = max(alpha, value)
-                if alpha >= beta:
-                    break
         else:
-            value = np.inf
-            for move in moves:
-                new_node = node.simulate_move(*move)
-                value = min(value, self.alphabeta(new_node, depth - 1, alpha, beta, True, str_log))
-                beta = min(beta, value)
-                if alpha >= beta:
-                    break
-
+            if maximizing_player:
+                value = - np.inf
+                for move in node.moves(node.current_color):
+                    new_node = node.simulate_move(*move)
+                    value = max(value, self.alphabeta(new_node, depth - 1, alpha, beta, False, str_log))
+                    alpha = max(alpha, value)
+                    if alpha >= beta:
+                        break
+            else:
+                value = np.inf
+                for move in node.moves(node.current_color):
+                    new_node = node.simulate_move(*move)
+                    value = min(value, self.alphabeta(new_node, depth - 1, alpha, beta, True, str_log))
+                    beta = min(beta, value)
+                    if alpha >= beta:
+                        break
         return value
 
     def combine(self, old_log, new_log):

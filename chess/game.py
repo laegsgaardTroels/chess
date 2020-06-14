@@ -42,15 +42,16 @@ class Game:
         return i, j
 
     def moves(self, color):
-        moves = []
+        """Generate moves for a given color.
+
+        NB: Important that this is a generator for lazy evaluation.
+        """
         for row in self.board:
             for piece in row:
                 if piece.color == color and piece.moves():
                     from_ = piece.position
-                    moves.extend([
-                        (from_, to) for to in piece.moves()
-                    ])
-        return moves
+                    for to in piece.moves():
+                        yield (from_, to)
 
     def copy(self):
         return copy.deepcopy(self)
@@ -104,9 +105,9 @@ class Game:
 
     def play(self, agent=None):
         while not (
-            game.is_checkmate(game.current_color)
-            or game.is_draw()
-            or game.is_check(game.opponent_color(game.current_color))
+            self.board.get_king(self.current_color) is None
+            or self.is_checkmate(self.current_color)
+            or self.is_draw()
         ):
             print(self)
             print()
@@ -128,7 +129,7 @@ class Game:
                 if self.board[from_] is None:
                     print("Not on the board...\n")
                     continue
-                if to not in self.board[from_].moves():
+                if to not in list(self.board[from_].moves()):
                     print("Can move this piece to here...\n")
                     continue
                 if self.board[from_].color != self.current_color:
@@ -143,7 +144,7 @@ class Game:
             logger.info(
                 f"\n\n{self.opponent_color()} moved "
                 f"{' -> '.join(chess_notation((from_, to)))}."
-                f"\n\n{game}\n"
+                f"\n\n{self}\n"
             )
         print()
         print(f"Winner is {self.opponent_color()}")

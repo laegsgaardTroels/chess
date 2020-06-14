@@ -25,11 +25,6 @@ class Piece:
             return ' '
         return getattr(self, self.color)
 
-    def print_moves(self):
-        new_board = board.copy()
-        for move in self.moves():
-            new_board[move] = '.'
-
 
 class Empty(Piece):
 

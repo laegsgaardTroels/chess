@@ -1,5 +1,6 @@
 import numpy as np
 
+from chess.pieces import Piece
 from chess.pieces import Tower
 from chess.pieces import Horse
 from chess.pieces import Bishop
@@ -125,8 +126,9 @@ class Board:
         return [Empty(None, self) for j in range(len(self))]
 
     def get_king(self, color):
+        """Returns None if no king is found."""
         for row in self.board:
             for piece in row:
                 if (piece.color == color) & isinstance(piece, King):
                     return piece
-        raise ValueError(f'Missing king of color {color}')
+        return None
