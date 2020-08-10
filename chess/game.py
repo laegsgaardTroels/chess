@@ -114,9 +114,12 @@ class Game:
                 print(self)
                 print()
                 print()
-                from_, to = self.get_move(agent)
-                if from_ is None:
+
+                move = self.get_move(agent)
+                if move is None:
                     continue
+
+                from_, to = move
                 self.move(from_, to)
 
                 if self.is_checkmate(self.current_color):
