@@ -1,7 +1,7 @@
 # Chess
 ![CI Checks](https://github.com/laegsgaardTroels/chess/workflows/CI%20Checks/badge.svg)
 
-A simple implementation of chess
+A simple implementation of chess.
 
 # TODO
 
