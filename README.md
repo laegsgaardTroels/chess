@@ -1,9 +1,12 @@
 # chess
+![CI Checks](https://github.com/laegsgaardTroels/chess/workflows/CI%20Checks/badge.svg)
+
 A simple implementation of chess
 
 
 # TODO
 
+- [ ] Add heuristic to the alpha beta search.
 - [ ] Speed up simulations.
 - [ ] Agent should only search promising paths.
 - [ ] Agent should search a fixed number of nodes as opposed to being limited by depth.
