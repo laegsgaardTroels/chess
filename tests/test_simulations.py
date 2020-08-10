@@ -1,6 +1,6 @@
 import pytest
 
-from chess import Game
+from chess.game import Game
 from random import choice
 
 SIMULATIONS = 10

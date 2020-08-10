@@ -1,4 +1,4 @@
-from chess import Board
+from chess.board import Board
 
 from chess.pieces import Tower
 from chess.pieces import Horse

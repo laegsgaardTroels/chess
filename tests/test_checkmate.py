@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 """Test common checkmates.
 
 References: https://en.wikipedia.org/wiki/Checkmate_pattern
 """
 
-from chess import Game
+from chess.game import Game
 
 from chess.pieces import Tower
 from chess.pieces import Horse

@@ -1,6 +1,3 @@
-import numpy as np
-
-
 class Piece:
     """An abstract class for a piece on the board."""
 
@@ -27,8 +24,8 @@ class Piece:
 
 
 class Empty(Piece):
-
     """No piece on the position is represented by the empty piece."""
+
     def moves(self):
         return None
 

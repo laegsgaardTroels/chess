@@ -1,4 +1,4 @@
-from chess import Game
+from chess.game import Game
 
 
 def test_checkmate():

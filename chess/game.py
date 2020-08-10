@@ -1,5 +1,4 @@
 from chess.board import Board
-from chess.agent import Agent
 
 from chess.pieces import Empty
 
@@ -149,14 +148,3 @@ class Game:
         print()
         print(f"Winner is {self.opponent_color()}")
         logger.info(f"winner is {self.opponent_color()}.")
-
-
-if __name__ == '__main__':
-    logging.basicConfig(
-        filename='game.log',
-        filemode='w',
-        level=logging.INFO
-    )
-    agent = Agent()
-    game = Game()
-    game.play(agent)
