@@ -1,5 +1,3 @@
-from chess.utils import chess_notation
-
 import numpy as np
 import logging
 
@@ -57,15 +55,16 @@ class AlphaBetaAgent(BaseAgent):
                 max_value = value
 
             # Save for debugging.
-            logger.debug(
-                f"{' -> '.join(chess_notation(move))}. value: {value}.\n"
-            )
+            # logger.info(
+            #     f"{' -> '.join(chess_notation(move))}. value: {value}.\n"
+            # )
         return best_move
 
     def alphabeta(
         self,
         node, depth,
-        alpha=-np.inf, beta=np.inf, maximizing_player=True,
+        alpha=-np.inf, beta=np.inf,
+        maximizing_player=True,
     ):
         """Minimax with alpha-beta pruning.
 

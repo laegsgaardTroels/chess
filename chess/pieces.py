@@ -92,8 +92,8 @@ class Pawn(Piece):
             raise ValueError(f"Invalid color {self.color}")
         moves = filter(
             lambda new_position:
-                self.board[new_position] and
-                self.is_opponent(self.board[new_position]),
+                self.board[new_position]
+                and self.is_opponent(self.board[new_position]),
             moves
         )
         return moves

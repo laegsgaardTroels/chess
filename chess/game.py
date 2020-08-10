@@ -103,48 +103,67 @@ class Game:
             return from_to[color]
 
     def play(self, agent=None):
-        while not (
-            self.board.get_king(self.current_color) is None
-            or self.is_checkmate(self.current_color)
-            or self.is_draw()
-        ):
-            print(self)
+        """Used to run the game.
+        """
+        try:
+            while not (
+                self.board.get_king(self.current_color) is None
+                or self.is_checkmate(self.current_color)
+                or self.is_draw()
+            ):
+                print(self)
+                print()
+                print()
+                from_, to = self.get_move(agent)
+                if from_ is None:
+                    continue
+                self.move(from_, to)
+
+                if self.is_checkmate(self.current_color):
+                    print(f'{self.current_color} is check')
+                    print()
+
             print()
-            if self.current_color == 'black':
-                from_, to = agent.policy(self)
-            else:
-                str_from = input('Move from: ')
-                str_to = input('Move to: ')
-                print()
-                from_ = self.translate(str_from)
-                to = self.translate(str_to)
+            print()
+            print(f"Winner is {self.opponent_color()}")
+            logger.info(f"winner is {self.opponent_color()}.")
 
-                if from_ is None or to is None:
-                    print("Invalid move...\n")
-                    continue
-                if isinstance(self.board[from_], Empty):
-                    print("Not a piece...\n")
-                    continue
-                if self.board[from_] is None:
-                    print("Not on the board...\n")
-                    continue
-                if to not in list(self.board[from_].moves()):
-                    print("Can move this piece to here...\n")
-                    continue
-                if self.board[from_].color != self.current_color:
-                    print('Not this players turn...\n')
-                    continue
-            self.move(from_, to)
+        except KeyboardInterrupt:
+            print()
+            print()
+            print("Game stopped.")
+            logger.info("game stopped due to keyboard interrupt.")
 
-            if self.is_checkmate(self.current_color):
-                print(f'{self.current_color} is check')
-                print()
+    def get_move(self, agent):
+        """Get the move from the agent or the player.
+        """
+        if self.current_color == 'black':
+            from_, to = agent.policy(self)
+        else:
+            str_from = input('Move from: ')
+            str_to = input('Move to: ')
+            print()
+            from_ = self.translate(str_from)
+            to = self.translate(str_to)
 
-            logger.info(
-                f"\n\n{self.opponent_color()} moved "
-                f"{' -> '.join(chess_notation((from_, to)))}."
-                f"\n\n{self}\n"
-            )
-        print()
-        print(f"Winner is {self.opponent_color()}")
-        logger.info(f"winner is {self.opponent_color()}.")
+            if from_ is None or to is None:
+                print("Invalid move...\n")
+                return None
+            if isinstance(self.board[from_], Empty):
+                print("Not a piece...\n")
+                return None
+            if self.board[from_] is None:
+                print("Not on the board...\n")
+                return None
+            if to not in list(self.board[from_].moves()):
+                print("Can move this piece to here...\n")
+                return None
+            if self.board[from_].color != self.current_color:
+                print('Not this players turn...\n')
+                return None
+        logger.info(
+            f"\n\n{self.opponent_color()} moved "
+            f"{' -> '.join(chess_notation((from_, to)))}."
+            f"\n\n{self}\n"
+        )
+        return from_, to
