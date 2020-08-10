@@ -53,11 +53,6 @@ class AlphaBetaAgent(BaseAgent):
             if value >= max_value:
                 best_move = move
                 max_value = value
-
-            # Save for debugging.
-            # logger.info(
-            #     f"{' -> '.join(chess_notation(move))}. value: {value}.\n"
-            # )
         return best_move
 
     def alphabeta(
