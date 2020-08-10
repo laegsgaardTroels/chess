@@ -39,5 +39,4 @@ lint: .venv/bin/activate
 .PHONY: tests 
 tests: .venv/bin/activate clean lint
 	. .venv/bin/activate; \
-		export CV_DATABRICKS_ENVIRONMENT=TESTING; \
 		${PYTHON_INTERPRETER} -m pytest tests --log-cli-level=DEBUG
