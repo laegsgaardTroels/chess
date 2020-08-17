@@ -2,8 +2,6 @@ from chess.board import Board
 
 from chess.pieces import Empty
 
-from chess.utils import chess_notation
-
 import copy
 import logging
 
@@ -12,33 +10,23 @@ logger = logging.getLogger(__name__)
 
 class Game:
 
-    letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    numbers = [1, 2, 3, 4, 5, 6, 7, 8]
-
     def __init__(
         self,
+        black_player,
+        white_player,
+        current_color='white',
         board=None,
-        current_color='black',
     ):
+        self.black_player = black_player(color='black')
+        self.white_player = white_player(color='white')
+        self.current_color = current_color
         if board is None:
             self.board = Board()
         else:
             self.board = Board(board)
-        self.current_color = current_color
 
     def __str__(self):
         return str(self.board)
-
-    def translate(self, chess_notation):
-        if len(chess_notation) != 2:
-            return None
-        letter, number = chess_notation
-        number = int(number)
-        if not (letter in Game.letters and number in Game.numbers):
-            return None
-        i = 8 - number
-        j = dict(zip(Game.letters, range(8)))[letter]
-        return i, j
 
     def moves(self, color):
         """Generate moves for a given color.
@@ -102,7 +90,7 @@ class Game:
         else:
             return from_to[color]
 
-    def play(self, agent=None):
+    def play(self):
         """Used to run the game.
         """
         try:
@@ -115,7 +103,7 @@ class Game:
                 print()
                 print()
 
-                move = self.get_move(agent)
+                move = self.get_move()
                 if move is None:
                     continue
 
@@ -137,36 +125,10 @@ class Game:
             print("Game stopped.")
             logger.info("game stopped due to keyboard interrupt.")
 
-    def get_move(self, agent):
+    def get_move(self):
         """Get the move from the agent or the player.
         """
         if self.current_color == 'black':
-            from_, to = agent.policy(self)
+            return self.black_player.policy(self)
         else:
-            str_from = input('Move from: ')
-            str_to = input('Move to: ')
-            print()
-            from_ = self.translate(str_from)
-            to = self.translate(str_to)
-
-            if from_ is None or to is None:
-                print("Invalid move...\n")
-                return None
-            if isinstance(self.board[from_], Empty):
-                print("Not a piece...\n")
-                return None
-            if self.board[from_] is None:
-                print("Not on the board...\n")
-                return None
-            if to not in list(self.board[from_].moves()):
-                print("Can move this piece to here...\n")
-                return None
-            if self.board[from_].color != self.current_color:
-                print('Not this players turn...\n')
-                return None
-        logger.info(
-            f"\n\n{self.opponent_color()} moved "
-            f"{' -> '.join(chess_notation((from_, to)))}."
-            f"\n\n{self}\n"
-        )
-        return from_, to
+            return self.white_player.policy(self)

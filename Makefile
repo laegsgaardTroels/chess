@@ -10,6 +10,10 @@ include .python-environment
 game: .venv/bin/activate
 	${PYTHON_INTERPRETER} -m chess
 
+.PHONY: self_play
+self_play: .venv/bin/activate
+	${PYTHON_INTERPRETER} -m chess --self_play True
+
 #################################################################################
 # DEVELOPMENT                                                                   #
 #################################################################################

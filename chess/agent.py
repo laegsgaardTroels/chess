@@ -1,6 +1,11 @@
 import numpy as np
 import logging
 
+import json
+
+from chess.pieces import Empty
+from chess.utils import chess_notation
+
 logger = logging.getLogger(__name__)
 
 
@@ -12,6 +17,47 @@ class BaseAgent:
 
     def policy(self, game):
         raise NotImplementedError("Should be implemented in subclass.")
+
+
+class HumanAgent(BaseAgent):
+    """A human agent."""
+
+    def translate(self, chess_notation):
+        letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+        numbers = [1, 2, 3, 4, 5, 6, 7, 8]
+        if len(chess_notation) != 2:
+            return None
+        letter, number = chess_notation
+        number = int(number)
+        if not (letter in letters and number in numbers):
+            return None
+        i = 8 - number
+        j = dict(zip(letters, range(8)))[letter]
+        return i, j
+
+    def policy(self, game):
+        str_from = input('Move from: ')
+        str_to = input('Move to: ')
+        print()
+        from_ = self.translate(str_from)
+        to = self.translate(str_to)
+
+        if from_ is None or to is None:
+            print("Invalid move...\n")
+            return None
+        if isinstance(game.board[from_], Empty):
+            print("Not a piece...\n")
+            return None
+        if game.board[from_] is None:
+            print("Not on the board...\n")
+            return None
+        if to not in list(game.board[from_].moves()):
+            print("Can move this piece to here...\n")
+            return None
+        if game.board[from_].color != self.color:
+            print('Not this players turn...\n')
+            return None
+        return from_, to
 
 
 class AlphaBetaAgent(BaseAgent):
@@ -43,6 +89,7 @@ class AlphaBetaAgent(BaseAgent):
 
     def policy(self, game):
         max_value = - np.inf
+        last_action_value = {}
         for move in game.moves(self.color):
             root_node = game.simulate_move(*move)
             value = self.alphabeta(
@@ -53,6 +100,10 @@ class AlphaBetaAgent(BaseAgent):
             if value >= max_value:
                 best_move = move
                 max_value = value
+
+            # TODO: Make below nicer.
+            last_action_value['->'.join(chess_notation(move))] = value
+        logger.info(json.dumps(last_action_value))
         return best_move
 
     def alphabeta(
