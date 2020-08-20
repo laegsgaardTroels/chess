@@ -136,7 +136,7 @@ class Game:
                     print("Invalid move...\n")
                     continue
                 print()
-                print('moving', chess_move_notation(move))
+                print('moving', Board.chess_move_notation(move))
                 print()
                 from_, to = move
                 new_game = self.simulate_move(from_, to)

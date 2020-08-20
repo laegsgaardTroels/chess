@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class AlphaBetaAgent(BaseAgent):
     """Agent using minimax with alpha-beta pruning."""
 
-    def __init__(self, color='black', depth=2):
+    def __init__(self, color='black', depth=3):
         super().__init__(color)
         self.depth = depth
         self.piece_value = {
