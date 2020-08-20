@@ -43,4 +43,4 @@ lint: .venv/bin/activate
 .PHONY: tests 
 tests: .venv/bin/activate clean lint
 	. .venv/bin/activate; \
-		${PYTHON_INTERPRETER} -m pytest tests --log-cli-level=DEBUG
+		${PYTHON_INTERPRETER} -m pytest tests -x --log-cli-level=ERROR

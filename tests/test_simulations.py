@@ -1,19 +1,20 @@
 import pytest
 
 from chess.game import Game
-from random import choice
+from chess.agent import RandomAgent
 
-SIMULATIONS = 10
+SIMULATIONS = 5
 
 
 @pytest.mark.parametrize("idx", range(SIMULATIONS))
 def test_simulation(idx):
     """Test that a randomly simulated game doesn't fail."""
-    game = Game()
-    while not (
-       game.board.get_king(game.current_color) is None
-       or game.is_checkmate(game.current_color)
-       or game.is_draw()
-    ):
-        move = choice(list(game.moves(game.current_color)))
-        game.move(*move)
+    game = Game(
+        white_player=RandomAgent,
+        black_player=RandomAgent,
+    )
+    try:
+        game.play()
+    except Exception as exception:
+        print(game.board)
+        raise exception

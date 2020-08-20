@@ -9,6 +9,10 @@ from chess.pieces import Queen
 from chess.pieces import Pawn
 from chess.pieces import Empty
 
+LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8]
+SPACE = ' '
+
 
 class Board:
     """The chess board.
@@ -87,9 +91,28 @@ class Board:
 
     def __str__(self):
         lines = []
+        lines.append(
+            ' '
+            + SPACE
+            + SPACE.join(LETTERS)
+            + SPACE
+            + ' '
+        )
         for idx, row in enumerate(self):
-            lines.append(str(8 - idx) + ' ' + ' '.join(map(str, row)))
-        lines.append('  a b c d e f g h')
+            lines.append(
+                str(8 - idx)
+                + SPACE
+                + SPACE.join(map(str, row))
+                + SPACE
+                + str(8 - idx)
+            )
+        lines.append(
+            ' '
+            + SPACE
+            + SPACE.join(LETTERS)
+            + SPACE
+            + ' '
+        )
         return '\n'.join(lines)
 
     def copy(self):
@@ -132,3 +155,27 @@ class Board:
                 if (piece.color == color) & isinstance(piece, King):
                     return piece
         return None
+
+    @staticmethod
+    def chess_notation(move):
+        from_, to = move
+        int_to_letter = dict(zip(range(8), LETTERS))
+        cn_from = f"{int_to_letter[from_[1]]}{8 - from_[0]}"
+        cn_to = f"{int_to_letter[to[1]]}{8 - to[0]}"
+        return cn_from, cn_to
+
+    @staticmethod
+    def translate(chess_notation):
+        if len(chess_notation) != 2:
+            return None
+        letter, number = chess_notation
+        number = int(number)
+        if not (letter in LETTERS and number in NUMBERS):
+            return None
+        i = 8 - number
+        j = dict(zip(LETTERS, range(8)))[letter]
+        return i, j
+
+    @staticmethod
+    def chess_move_notation(move):
+        return '->'.join(Board.chess_notation(move))
