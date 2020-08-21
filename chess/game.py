@@ -1,8 +1,6 @@
 from chess.board import Board
-
+from chess.agent import RandomAgent
 from chess.pieces import Empty
-
-from chess.utils import chess_notation
 
 import copy
 import logging
@@ -12,35 +10,25 @@ logger = logging.getLogger(__name__)
 
 class Game:
 
-    letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-    numbers = [1, 2, 3, 4, 5, 6, 7, 8]
-
     def __init__(
         self,
         board=None,
-        current_color='black',
+        white_player=RandomAgent,
+        black_player=RandomAgent,
+        current_color='white',
     ):
+        self.white_player = white_player(color='white')
+        self.black_player = black_player(color='black')
+        self.current_color = current_color
         if board is None:
             self.board = Board()
         else:
             self.board = Board(board)
-        self.current_color = current_color
 
     def __str__(self):
         return str(self.board)
 
-    def translate(self, chess_notation):
-        if len(chess_notation) != 2:
-            return None
-        letter, number = chess_notation
-        number = int(number)
-        if not (letter in Game.letters and number in Game.numbers):
-            return None
-        i = 8 - number
-        j = dict(zip(Game.letters, range(8)))[letter]
-        return i, j
-
-    def moves(self, color):
+    def moves(self, color, with_piece=False):
         """Generate moves for a given color.
 
         NB: Important that this is a generator for lazy evaluation.
@@ -50,7 +38,19 @@ class Game:
                 if piece.color == color and piece.moves():
                     from_ = piece.position
                     for to in piece.moves():
-                        yield (from_, to)
+                        if with_piece:
+                            yield piece, (from_, to)
+                        else:
+                            yield (from_, to)
+
+    def moves_str(self, color):
+        moves_strs = []
+        for piece, move in self.moves(color, with_piece=True):
+            move_str = Board.chess_move_notation(move)
+            moves_strs.append(
+                f"{str(piece)} : {move_str}"
+            )
+        return '\n'.join(moves_strs)
 
     def copy(self):
         return copy.deepcopy(self)
@@ -65,18 +65,19 @@ class Game:
         new_game = self.copy()
         return new_game.move(from_, to)
 
-    def is_checkmate(self, color):
-        return (
-            self.is_check(color)
-            & self.cant_move_out_of_check(color)
-        )
-
     def is_check(self, color):
         king = self.board.get_king(color)
-        enemy_moves = [
-            to for from_, to in self.moves(self.opponent_color(color))
-        ]
-        return king.position in enemy_moves
+        opponent_check_pieces = []
+        for piece, move in self.moves(
+            self.opponent_color(color),
+            with_piece=True,
+        ):
+            from_, to = move
+            if king.position == to:
+                opponent_check_pieces.append(
+                    piece
+                )
+        return opponent_check_pieces
 
     def is_draw(self):
         pieces_left = []
@@ -88,10 +89,10 @@ class Game:
             return True
         return False
 
-    def cant_move_out_of_check(self, color):
+    def is_checkmate(self, color):
         for move in self.moves(color):
-            new_board = self.simulate_move(*move)
-            if not new_board.is_check(color):
+            new_game = self.simulate_move(*move)
+            if not new_game.is_check(color):
                 return False
         return True
 
@@ -102,71 +103,95 @@ class Game:
         else:
             return from_to[color]
 
-    def play(self, agent=None):
-        """Used to run the game.
+    def play(self, verbose=False):
+        """The game loop.
         """
+        if verbose:
+            print(r"""
+            (  ____ \|\     /|(  ____ \(  ____ \(  ____ \
+            | (    \/| )   ( || (    \/| (    \/| (    \/
+            | |      | (___) || (__    | (_____ | (
+            | |      |  ___  ||  __)   (_____  )(_____  )
+            | |      | (   ) || (            ) |      ) |
+            | (____/\| )   ( || (____/\/\____) |/\____) |
+            (_______/|/     \|(_______/\_______)\_______)
+
+            """)
+            print(f"White player: {self.white_player}")
+            print(f"Black player: {self.black_player}")
+            print()
+            print()
         try:
             while not (
-                self.board.get_king(self.current_color) is None
-                or self.is_checkmate(self.current_color)
+                self.is_checkmate(self.current_color)
                 or self.is_draw()
             ):
-                print(self)
-                print()
-                print()
-
-                move = self.get_move(agent)
-                if move is None:
-                    continue
-
-                from_, to = move
-                self.move(from_, to)
-
-                if self.is_checkmate(self.current_color):
-                    print(f'{self.current_color} is check')
+                if verbose:
+                    print(self)
                     print()
 
-            print()
-            print()
-            print(f"Winner is {self.opponent_color()}")
-            logger.info(f"winner is {self.opponent_color()}.")
+                move = self.get_move()
+                if move is None:
+                    print()
+                    print("Invalid move...\n")
+                    continue
+                print()
+                print('moving', Board.chess_move_notation(move))
+                print()
+                from_, to = move
+                new_game = self.simulate_move(from_, to)
+                if new_game.is_check(self.current_color):
+                    if verbose:
+                        print()
+                        print("Cannot move into check...\n")
+                    continue
+                self.move(from_, to)
+
+                # TODO: Below looks like shit
+                check = self.is_check(self.current_color)
+                if check:
+                    if verbose:
+                        check_str = '\n'.join(map(str, check))
+                        print()
+                        print(f'{self.current_color} is check by {check_str}')
+                        print()
+
+            if verbose:
+                if self.is_draw():
+                    self.winner = None
+                    print()
+                    print()
+                    print("It is a draw!")
+                    logger.info("it is a draw.")
+                else:
+                    self.winner = self.opponent_color()
+                    print()
+                    print()
+                    print(f"Winner is {self.winner}")
+                    print(f"White player: {self.white_player}")
+                    print(f"Black player: {self.black_player}")
+                    logger.info(f"winner is {self.winner}.")
+
+            if verbose:
+                print()
+                print()
+                print("White Moves:")
+                print(self.moves_str('white'))
+                print("Black Moves:")
+                print(self.moves_str('black'))
+                print()
 
         except KeyboardInterrupt:
-            print()
-            print()
-            print("Game stopped.")
+            if verbose:
+                print()
+                print()
+                print("Game stopped.")
             logger.info("game stopped due to keyboard interrupt.")
 
-    def get_move(self, agent):
+    def get_move(self):
         """Get the move from the agent or the player.
         """
         if self.current_color == 'black':
-            from_, to = agent.policy(self)
+            return self.black_player.policy(self)
         else:
-            str_from = input('Move from: ')
-            str_to = input('Move to: ')
-            print()
-            from_ = self.translate(str_from)
-            to = self.translate(str_to)
-
-            if from_ is None or to is None:
-                print("Invalid move...\n")
-                return None
-            if isinstance(self.board[from_], Empty):
-                print("Not a piece...\n")
-                return None
-            if self.board[from_] is None:
-                print("Not on the board...\n")
-                return None
-            if to not in list(self.board[from_].moves()):
-                print("Can move this piece to here...\n")
-                return None
-            if self.board[from_].color != self.current_color:
-                print('Not this players turn...\n')
-                return None
-        logger.info(
-            f"\n\n{self.opponent_color()} moved "
-            f"{' -> '.join(chess_notation((from_, to)))}."
-            f"\n\n{self}\n"
-        )
-        return from_, to
+            return self.white_player.policy(self)

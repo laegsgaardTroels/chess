@@ -7,4 +7,4 @@ ignore =
 exclude =
     __pycache__
 max-line-length = 100
-max-complexity = 10
+max-complexity = 15

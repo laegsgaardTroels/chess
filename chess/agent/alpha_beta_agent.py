@@ -1,23 +1,17 @@
+from chess.agent import BaseAgent
+from chess.board import Board
+
 import numpy as np
 import logging
+import json
 
 logger = logging.getLogger(__name__)
-
-
-class BaseAgent:
-    """A Base class for agents."""
-
-    def __init__(self, color='black'):
-        self.color = color
-
-    def policy(self, game):
-        raise NotImplementedError("Should be implemented in subclass.")
 
 
 class AlphaBetaAgent(BaseAgent):
     """Agent using minimax with alpha-beta pruning."""
 
-    def __init__(self, color='black', depth=2):
+    def __init__(self, color='black', depth=3):
         super().__init__(color)
         self.depth = depth
         self.piece_value = {
@@ -43,6 +37,8 @@ class AlphaBetaAgent(BaseAgent):
 
     def policy(self, game):
         max_value = - np.inf
+        last_action_value = {}
+        best_moves = []
         for move in game.moves(self.color):
             root_node = game.simulate_move(*move)
             value = self.alphabeta(
@@ -50,10 +46,16 @@ class AlphaBetaAgent(BaseAgent):
                 depth=self.depth - 1,
                 maximizing_player=False
             )
-            if value >= max_value:
-                best_move = move
+            if value == max_value:
+                best_moves.append(move)
+            if value > max_value:
+                best_moves = [move]
                 max_value = value
-        return best_move
+
+            # TODO: Make below nicer.
+            last_action_value[Board.chess_move_notation(move)] = value
+        logger.info(json.dumps(last_action_value))
+        return sorted(best_moves, key=distance_to_board_center)[0]
 
     def alphabeta(
         self,
@@ -91,3 +93,11 @@ class AlphaBetaAgent(BaseAgent):
                     if alpha >= beta:
                         break
         return value
+
+
+def distance_to_board_center(move):
+    from_, to = move
+    return (
+        (to[0] - 3.5) ** 2
+        + (to[1] - 3.5) ** 2
+    )
