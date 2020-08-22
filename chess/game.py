@@ -11,6 +11,11 @@ logger = logging.getLogger(__name__)
 
 
 class Game:
+    """The Game has the game loop and specific rules like check, promotion and castling.
+
+    The game contains the agents playing and the board. A game can simulate moves, this
+    can be used by the agents.
+    """
 
     def __init__(
         self,
