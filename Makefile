@@ -8,11 +8,13 @@ include .python-environment
 .DEFAULT_GOAL := game
 .PHONY: game
 game: .venv/bin/activate
-	${PYTHON_INTERPRETER} -m chess
+	. .venv/bin/activate; \
+		${PYTHON_INTERPRETER} -m chess
 
 .PHONY: self_play
 self_play: .venv/bin/activate
-	${PYTHON_INTERPRETER} -m chess --self_play True
+	. .venv/bin/activate; \
+		${PYTHON_INTERPRETER} -m chess --self_play True
 
 #################################################################################
 # DEVELOPMENT                                                                   #

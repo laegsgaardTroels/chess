@@ -1,6 +1,8 @@
 from chess.board import Board
 from chess.agent import RandomAgent
 from chess.pieces import Empty
+from chess.pieces import Queen
+from chess.pieces import Pawn
 
 import copy
 import logging
@@ -56,7 +58,13 @@ class Game:
         return copy.deepcopy(self)
 
     def move(self, from_, to):
-        self.board[to] = self.board[from_]
+        piece = self.board[from_]
+
+        # If a Pawn reaches eigth rank then replace by a queen.
+        if isinstance(piece, Pawn) and to[0] in [0, 7]:
+            piece = Queen(self.current_color)
+
+        self.board[to] = piece
         self.board[from_] = Empty(None, self)
         self.current_color = self.opponent_color()
         return self

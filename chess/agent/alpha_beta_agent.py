@@ -1,9 +1,7 @@
 from chess.agent import BaseAgent
-from chess.board import Board
 
 import numpy as np
 import logging
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +9,7 @@ logger = logging.getLogger(__name__)
 class AlphaBetaAgent(BaseAgent):
     """Agent using minimax with alpha-beta pruning."""
 
-    def __init__(self, color='black', depth=3):
+    def __init__(self, color='black', depth=2):
         super().__init__(color)
         self.depth = depth
         self.piece_value = {
@@ -37,7 +35,6 @@ class AlphaBetaAgent(BaseAgent):
 
     def policy(self, game):
         max_value = - np.inf
-        last_action_value = {}
         best_moves = []
         for move in game.moves(self.color):
             root_node = game.simulate_move(*move)
@@ -52,10 +49,8 @@ class AlphaBetaAgent(BaseAgent):
                 best_moves = [move]
                 max_value = value
 
-            # TODO: Make below nicer.
-            last_action_value[Board.chess_move_notation(move)] = value
-        logger.info(json.dumps(last_action_value))
-        return sorted(best_moves, key=distance_to_board_center)[0]
+        # If equal value then select the piece closest to the center of the board.
+        return sorted(best_moves, key=distance_to_board_center_heuristic)[0]
 
     def alphabeta(
         self,
@@ -95,7 +90,7 @@ class AlphaBetaAgent(BaseAgent):
         return value
 
 
-def distance_to_board_center(move):
+def distance_to_board_center_heuristic(move):
     from_, to = move
     return (
         (to[0] - 3.5) ** 2
