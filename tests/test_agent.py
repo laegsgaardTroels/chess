@@ -2,7 +2,7 @@ from chess.game import Game
 from chess.agent import AlphaBetaAgent
 
 
-def test_policy():
+def test_alpha_beta_agent_policy():
     """How does the agent handle naive examples."""
     agent = AlphaBetaAgent(color='black', depth=2)
     game = Game(current_color='white')
