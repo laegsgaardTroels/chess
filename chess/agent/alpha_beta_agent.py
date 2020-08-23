@@ -37,7 +37,7 @@ class AlphaBetaAgent(BaseAgent):
         max_value = - np.inf
         best_moves = []
         for move in game.moves(self.color):
-            root_node = game.simulate_move(*move)
+            root_node = game.simulate(move)
             value = self.alphabeta(
                 node=root_node,
                 depth=self.depth - 1,
@@ -72,7 +72,7 @@ class AlphaBetaAgent(BaseAgent):
             if maximizing_player:
                 value = - np.inf
                 for move in node.moves(node.current_color):
-                    new_node = node.simulate_move(*move)
+                    new_node = node.simulate(move)
                     new_value = self.alphabeta(new_node, depth - 1, alpha, beta, False)
                     value = max(value, new_value)
                     alpha = max(alpha, value)
@@ -81,7 +81,7 @@ class AlphaBetaAgent(BaseAgent):
             else:
                 value = np.inf
                 for move in node.moves(node.current_color):
-                    new_node = node.simulate_move(*move)
+                    new_node = node.simulate(move)
                     new_value = self.alphabeta(new_node, depth - 1, alpha, beta, True)
                     value = min(value, new_value)
                     beta = min(beta, value)
@@ -91,8 +91,9 @@ class AlphaBetaAgent(BaseAgent):
 
 
 def distance_to_board_center_heuristic(move):
-    from_, to = move
+    if isinstance(move, Castling):
+        return 10
     return (
-        (to[0] - 3.5) ** 2
-        + (to[1] - 3.5) ** 2
+        (move.to[0] - 3.5) ** 2
+        + (move.to[1] - 3.5) ** 2
     )

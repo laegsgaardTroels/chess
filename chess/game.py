@@ -1,8 +1,7 @@
 from chess.board import Board
 from chess.agent import RandomAgent
 from chess.pieces import Empty
-from chess.pieces import Queen
-from chess.pieces import Pawn
+from chess.move import Move
 
 import copy
 import logging
@@ -32,10 +31,12 @@ class Game:
         else:
             self.board = Board(board)
 
+        self._game_history = []
+
     def __str__(self):
         return str(self.board)
 
-    def moves(self, color, with_piece=False):
+    def moves(self, color):
         """Generate moves for a given color.
 
         NB: Important that this is a generator for lazy evaluation.
@@ -45,52 +46,29 @@ class Game:
                 if piece.color == color and piece.moves():
                     from_ = piece.position
                     for to in piece.moves():
-                        if with_piece:
-                            yield piece, (from_, to)
-                        else:
-                            yield (from_, to)
-
-    def moves_str(self, color):
-        moves_strs = []
-        for piece, move in self.moves(color, with_piece=True):
-            move_str = Board.chess_move_notation(move)
-            moves_strs.append(
-                f"{str(piece)} : {move_str}"
-            )
-        return '\n'.join(moves_strs)
+                        new_move = Move(piece, from_, to)
+                        yield new_move
 
     def copy(self):
         return copy.deepcopy(self)
 
-    def move(self, from_, to):
-        piece = self.board[from_]
-
-        # If a Pawn reaches eigth rank then replace by a queen.
-        if isinstance(piece, Pawn) and to[0] in [0, 7]:
-            piece = Queen(self.current_color)
-
-        self.board[to] = piece
-        self.board[from_] = Empty(None, self)
-        self.current_color = self.opponent_color()
-        return self
-
-    def simulate_move(self, from_, to):
+    def simulate(self, move):
         new_game = self.copy()
-        return new_game.move(from_, to)
+        return move(new_game)
 
     def is_check(self, color):
-        king = self.board.get_king(color)
-        opponent_check_pieces = []
-        for piece, move in self.moves(
-            self.opponent_color(color),
-            with_piece=True,
-        ):
-            from_, to = move
-            if king.position == to:
-                opponent_check_pieces.append(
-                    piece
+        check_moves = []
+        for move in self.moves(self.opponent_color(color)):
+            if (
+                self
+                .simulate(move)
+                .board
+                .get_king(color)
+            ) is None:
+                check_moves.append(
+                    move
                 )
-        return opponent_check_pieces
+        return check_moves
 
     def is_draw(self):
         pieces_left = []
@@ -100,11 +78,18 @@ class Game:
                     pieces_left.append(piece)
         if len(pieces_left) == 2:
             return True
+
+        # Threefold repetition rule.
+        if sum(
+            str(self) == board
+            for board in self._game_history
+        ) >= 3:
+            return True
         return False
 
     def is_checkmate(self, color):
         for move in self.moves(color):
-            new_game = self.simulate_move(*move)
+            new_game = self.simulate(move)
             if not new_game.is_check(color):
                 return False
         return True
@@ -135,69 +120,45 @@ class Game:
             print()
             print()
         try:
+
+            if verbose:
+                print(self)
+                print()
+
             while not (
                 self.is_checkmate(self.current_color)
                 or self.is_draw()
             ):
-                if verbose:
-                    print(self)
-                    print()
 
                 move = self.get_move()
                 if move is None:
-                    print()
                     print("Invalid move...\n")
+                    print()
                     continue
-                print()
-                print('moving', Board.chess_move_notation(move))
-                print()
-                from_, to = move
-                new_game = self.simulate_move(from_, to)
-                if new_game.is_check(self.current_color):
-                    if verbose:
-                        print()
-                        print("Cannot move into check...\n")
-                    continue
-                self.move(from_, to)
+                self._game_history.append(str(self))
+                move(self)
 
-                # TODO: Below looks like shit
-                check = self.is_check(self.current_color)
-                if check:
-                    if verbose:
-                        check_str = '\n'.join(map(str, check))
-                        print()
-                        print(f'{self.current_color} is check by {check_str}')
-                        print()
+                if verbose:
+                    print(f'Color: {self.opponent_color()}')
+                    print(f'Move: {move}')
+                    print()
+                    print(self)
+                    print()
 
             if verbose:
                 if self.is_draw():
                     self.winner = None
-                    print()
-                    print()
                     print("It is a draw!")
                     logger.info("it is a draw.")
                 else:
                     self.winner = self.opponent_color()
-                    print()
-                    print()
                     print(f"Winner is {self.winner}")
                     print(f"White player: {self.white_player}")
                     print(f"Black player: {self.black_player}")
                     logger.info(f"winner is {self.winner}.")
 
-            if verbose:
-                print()
-                print()
-                print("White Moves:")
-                print(self.moves_str('white'))
-                print("Black Moves:")
-                print(self.moves_str('black'))
-                print()
-
         except KeyboardInterrupt:
             if verbose:
-                print()
-                print()
                 print("Game stopped.")
             logger.info("game stopped due to keyboard interrupt.")
 

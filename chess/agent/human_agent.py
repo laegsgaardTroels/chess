@@ -1,6 +1,7 @@
 from chess.agent import BaseAgent
 from chess.pieces import Empty
 from chess.board import Board
+from chess.move import Move
 
 
 class HumanAgent(BaseAgent):
@@ -32,4 +33,5 @@ class HumanAgent(BaseAgent):
         if game.board[from_].color != self.color:
             print('Not this players turn...\n')
             return None
-        return from_, to
+
+        return Move(game.board[from_], from_, to)

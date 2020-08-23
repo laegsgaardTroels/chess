@@ -5,6 +5,7 @@ class Piece:
         self.color = color
         self.board = board
         self.position = position
+        self.has_moved = False
 
     def is_opponent(self, other):
         """Return the color of the opponent."""
