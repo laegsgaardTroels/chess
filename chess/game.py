@@ -32,6 +32,8 @@ class Game:
         else:
             self.board = Board(board)
 
+        self._game_history = []
+
     def __str__(self):
         return str(self.board)
 
@@ -100,6 +102,13 @@ class Game:
                     pieces_left.append(piece)
         if len(pieces_left) == 2:
             return True
+
+        # Threefold repetition rule.
+        if sum(
+            str(self) == board
+            for board in self._game_history
+        ) >= 3:
+            return True
         return False
 
     def is_checkmate(self, color):
@@ -158,6 +167,7 @@ class Game:
                         print()
                         print("Cannot move into check...\n")
                     continue
+                self._game_history.append(str(self))
                 self.move(from_, to)
 
                 # TODO: Below looks like shit
