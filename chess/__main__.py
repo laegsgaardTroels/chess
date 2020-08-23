@@ -2,7 +2,6 @@
 """
 from chess.agent import HumanAgent
 from chess.agent import AlphaBetaAgent
-from chess.agent import RandomAgent
 from chess.game import Game
 
 import argparse
@@ -30,7 +29,7 @@ logging.basicConfig(
 if args.self_play:
     game = Game(
         white_player=AlphaBetaAgent,
-        black_player=RandomAgent,
+        black_player=AlphaBetaAgent,
     )
 else:
     game = Game(
