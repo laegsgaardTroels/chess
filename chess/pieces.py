@@ -1,3 +1,6 @@
+from chess import config
+
+
 class Piece:
     """An abstract class for a piece on the board."""
 
@@ -32,8 +35,8 @@ class Empty(Piece):
 
 class King(Piece):
 
-    white = u'♔'
-    black = u'♚'
+    white = config.WHITE_KING
+    black = config.BLACK_KING
 
     def moves(self):
         moves = []
@@ -51,8 +54,8 @@ class King(Piece):
 
 class Pawn(Piece):
 
-    white = u'♙'
-    black = u'♟'
+    white = config.WHITE_PAWN
+    black = config.BLACK_PAWN
 
     def moves(self):
         i, j = self.position
@@ -101,8 +104,8 @@ class Pawn(Piece):
 
 class Tower(Piece):
 
-    white = u'♖'
-    black = u'♜'
+    white = config.WHITE_ROOK
+    black = config.BLACK_ROOK
 
     def moves(self):
         i, j = self.position
@@ -125,8 +128,8 @@ class Tower(Piece):
 
 class Bishop(Piece):
 
-    white = u'♗'
-    black = u'♝'
+    white = config.WHITE_BISHOP
+    black = config.BLACK_BISHOP
 
     def moves(self):
         i, j = self.position
@@ -149,8 +152,8 @@ class Bishop(Piece):
 
 class Horse(Piece):
 
-    white = u'♘'
-    black = u'♞'
+    white = config.WHITE_HORSE
+    black = config.BLACK_HORSE
 
     def moves(self):
         i, j = self.position
@@ -173,8 +176,8 @@ class Horse(Piece):
 
 class Queen(Piece):
 
-    white = u'♕'
-    black = u'♛'
+    white = config.WHITE_QUEEN
+    black = config.BLACK_QUEEN
 
     def moves(self):
         i, j = self.position
