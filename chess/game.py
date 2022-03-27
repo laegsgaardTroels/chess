@@ -154,12 +154,14 @@ class Game:
 
                 move = self.get_move()
                 if move is None:
-                    print()
-                    print("Invalid move...\n")
+                    if verbose:
+                        print()
+                        print("Invalid move...\n")
                     continue
-                print()
-                print('moving', Board.chess_move_notation(move))
-                print()
+                if verbose:
+                    print()
+                    print('moving', Board.chess_move_notation(move))
+                    print()
                 from_, to = move
                 new_game = self.simulate_move(from_, to)
                 if new_game.is_check(self.current_color):

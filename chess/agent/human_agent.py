@@ -8,11 +8,8 @@ class HumanAgent(BaseAgent):
 
     def policy(self, game):
         print()
-        str_from = input(
-            'Move from : ')
-        str_to = input(
-            'Move to   : '
-        )
+        str_from = input('Move from : ')
+        str_to = input('Move to   : ')
         print()
         from_ = Board.translate(str_from)
         to = Board.translate(str_to)

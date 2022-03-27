@@ -1,33 +1,31 @@
-include .python-environment
-
 #################################################################################
 # GAMEPLAY                                                                      #
 #################################################################################
 
 ## Create a chess game.
-.DEFAULT_GOAL := game
-.PHONY: game
-game: .venv/bin/activate
-	. .venv/bin/activate; \
-		${PYTHON_INTERPRETER} -m chess
+.DEFAULT_GOAL := human_vs_machine
+.PHONY: human_vs_machine
+human_vs_machine: 
+	conda run --no-capture-output --prefix envs/chess python -m chess human_vs_machine
 
-.PHONY: self_play
-self_play: .venv/bin/activate
-	. .venv/bin/activate; \
-		${PYTHON_INTERPRETER} -m chess --self_play True
 
 #################################################################################
 # DEVELOPMENT                                                                   #
 #################################################################################
 
-## Used to create a virtual environment for development.
-.venv/bin/activate: .python-environment requirements.txt
-	rm -rf .venv
-	${PYTHON_INTERPRETER} -c 'import sys; assert sys.version_info.major == ${PYTHON_MAJOR_VERSION} and sys.version_info.minor == ${PYTHON_MINOR_VERSION}'
-	${PYTHON_INTERPRETER} -m pip install --upgrade pip
-	${PYTHON_INTERPRETER} -m venv .venv
-	. .venv/bin/activate; \
-		pip install -r requirements.txt
+.PHONY: self_play
+self_play:
+	conda run --no-capture-output --prefix envs/chess python -m chess self_play
+
+.PHONY: profiling
+profiling:
+	conda run --no-capture-output --prefix envs/chess python -m chess profiling
+
+.PHONY: envs
+envs:
+	conda env create --prefix envs/chess 
+	conda install conda-build
+	conda develop .
 
 ## Delete all compiled Python files.
 .PHONY: clean 
@@ -37,12 +35,11 @@ clean:
 
 ## Lint using flake8.
 .PHONY: lint 
-lint: .venv/bin/activate
-	. .venv/bin/activate; \
-		${PYTHON_INTERPRETER} -m flake8 chess 
+lint:
+	conda run --no-capture-output --prefix envs/chess python -m flake8 chess
 
 ## Run tests.
 .PHONY: tests 
-tests: .venv/bin/activate clean lint
-	. .venv/bin/activate; \
-		${PYTHON_INTERPRETER} -m pytest tests -x --log-cli-level=ERROR
+tests: clean lint
+	conda run --no-capture-output --prefix envs/chess python -m pytest tests -x --log-cli-level=ERROR
+
