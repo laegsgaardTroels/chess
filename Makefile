@@ -25,7 +25,6 @@ profiling:
 envs:
 	conda env create --prefix envs/chess 
 	conda install conda-build
-	conda develop .
 
 ## Delete all compiled Python files.
 .PHONY: clean 
@@ -40,6 +39,6 @@ lint:
 
 ## Run tests.
 .PHONY: tests 
-tests: clean lint
+tests:
 	conda run --no-capture-output --prefix envs/chess python -m pytest tests -x --log-cli-level=ERROR
 
