@@ -43,7 +43,7 @@ class Agent(ABC):
 
 class RandomAgent(Agent):
     def policy(self, state):
-        choices =_movegen.actions(state)
+        choices = _movegen.actions(state)
         action = np.empty(1, ACTION_DTYPE)
         action[:] = np.random.choice(choices)
         return action
@@ -185,4 +185,8 @@ class AlphaBetaAgent(Agent):
         return value
 
     def __repr__(self) -> str:
-        return f"AlphaBetaAgent(color={self.color}, depth={self.depth}, piece_value={self.piece_value})"
+        return (
+            f"AlphaBetaAgent(color={self.color}, "
+            f"depth={self.depth}, "
+            f"piece_value={self.piece_value})"
+        )

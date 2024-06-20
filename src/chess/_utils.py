@@ -39,7 +39,8 @@ def boardstr(state):
                         break
                 except Exception as exec:
                     raise ValueError(
-                        f"Something went wrong {state['board']=}, {i=}, {j=} {state['board'][i, j]=}"
+                        f"Something went wrong {state['board']=}, "
+                        f"{i=}, {j=} {state['board'][i, j]=}"
                     ) from exec
             else:
                 s = s + " "
@@ -55,7 +56,7 @@ def statestr(state):
     b = boardstr(state)
     for line, x in enumerate(range(0, 64, 8)):
         line_str = str(8 - line)
-        s = s + line_str + b[x : x + 8] + "\n"
+        s = s + line_str + b[x:x + 8] + "\n"
     s = s + " abcdefgh"
     return s
 
