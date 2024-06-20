@@ -8,7 +8,6 @@ ext = Extension(
     "chess._movegen",
     sources=[
         "src/chess/_movegen/__init__.pyx",
-        "src/chess/_movegen/src/cmovegen.cpp",
     ],
     include_dirs=[np.get_include()],
     language="c++",
