@@ -1,6 +1,7 @@
 import pytest
 from typing import NamedTuple, Literal
 import numpy as np
+import numpy.typing as npt
 from chess import _movegen
 from chess import _utils
 from chess._constants import NO_CASTLING, BLACK, WHITE, PIECE_STRS
@@ -26,7 +27,7 @@ def init_state_flipud(color, board, castling):
     return _utils.init_state(
         color=not color,
         board="".join(
-            reversed([board[idx : idx + 8] for idx in range(0, 64, 8)])
+            reversed([board[idx:idx + 8] for idx in range(0, 64, 8)])
         ).translate(str.maketrans(TRANSLATIONTABLE)),
         castling=castling[2:4] + castling[0:2],
     )
@@ -36,7 +37,7 @@ def init_state_fliplr(color, board, castling):
     return _utils.init_state(
         color=color,
         board="".join(
-            ["".join(reversed(board[idx : idx + 8])) for idx in range(0, 64, 8)]
+            ["".join(reversed(board[idx:idx + 8])) for idx in range(0, 64, 8)]
         ),
         castling=castling,
     )
@@ -63,8 +64,7 @@ class NumberOfActionsTestData(NamedTuple):
 
 class NumberOfActionsTestParams(NamedTuple):
     # State
-    state: np.void
-
+    state: npt.NDArray
     # Expected number of actions for each piece (default=0)
     expected_number_of_actions: dict[str, int]
 
@@ -723,7 +723,10 @@ def test_expected_number_of_actions(state, expected_number_of_actions):
         expected = expected_number_of_actions.get(piece_str, 0)
         assert (
             actual == expected
-        ), f"\npiece={PIECE_STRS[piece]}\n{_utils.statestr(state)}\n{str(actions[actions['piece'] == piece])}"
+        ), (
+            f"\npiece={PIECE_STRS[piece]}"
+            f"\n{_utils.statestr(state)}\n{str(actions[actions['piece'] == piece])}"
+        )
 
 
 #
