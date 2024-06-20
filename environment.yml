@@ -1,7 +1,0 @@
-name: chess-cython
-channels:
-  - conda-forge
-dependencies:
-  - flake8
-  - numpy
-  - pytest
