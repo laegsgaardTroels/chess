@@ -4,7 +4,7 @@ PYTHON_MINOR_VERSION := $(word 2,$(PYTHON_VERSION))
 PYTHON_INTERPRETER := python
 
 .PHONY: compile
-compile: venv
+compile:
 	. venv/bin/activate; \
 		${PYTHON_INTERPRETER} setup.py build_ext --inplace
 
@@ -33,5 +33,12 @@ clean:
 	find . -type d -name "__pycache__" -delete
  
 .PHONY: test
-test: venv
+test:
 	source venv/bin/activate; pytest tests -vvvv
+
+.PHONY: lint
+lint: 
+	. venv/bin/activate; \
+		${PYTHON_INTERPRETER} -m flake8 src
+	. venv/bin/activate; \
+		${PYTHON_INTERPRETER} -m flake8 tests
