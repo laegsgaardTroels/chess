@@ -7,7 +7,6 @@ PYTHON_INTERPRETER := python
 compile:
 	. venv/bin/activate; \
 		${PYTHON_INTERPRETER} setup.py build_ext --inplace
-#${PYTHON_INTERPRETER} -m pip install -e .[dev]
 
 .PHONY: venv
 venv: .python-version
@@ -23,7 +22,6 @@ venv: .python-version
 		${PYTHON_INTERPRETER} -m pip install --upgrade pip; \
 		${PYTHON_INTERPRETER} -m pip install -r requirements.txt; \
 		${PYTHON_INTERPRETER} -m pip install -e .[dev]
-
 
 .PHONY: clean
 clean:
