@@ -1,7 +1,6 @@
 import cython
 import numpy as np
 cimport numpy as np
-from libcpp.vector cimport vector
 from chess._constants import (
     EMPTY,
     BLACK_ROOK,
