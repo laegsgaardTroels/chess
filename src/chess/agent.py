@@ -3,6 +3,10 @@ from abc import ABC, abstractmethod
 import numpy as np
 import numpy.typing as npt
 from chess._constants import (
+    BOARD,
+    VERBOSE,
+    MAX_ROUNDS,
+    LOGO,
     EMPTY,
     BLACK_ROOK,
     BLACK_KNIGHT,
@@ -18,10 +22,12 @@ from chess._constants import (
     WHITE_PAWN,
     WHITE,
     BLACK,
+    STATE_DTYPE,
     ACTION_DTYPE,
 )
 from chess import _movegen
 from chess import _utils
+from chess._version import __version__
 
 
 State = npt.NDArray
@@ -30,7 +36,7 @@ Action = npt.NDArray
 
 class Agent(ABC):
     def __init__(self, color):
-        self.color = color
+        self.color = color  # FIXME: Is this needed?
 
     @abstractmethod
     def policy(self, state: State) -> Action:
@@ -41,7 +47,14 @@ class Agent(ABC):
         ...
 
 
+def parse(agent: str) -> Agent:
+    return eval(agent)
+
+
 class RandomAgent(Agent):
+    def __init__(self, seed: int = 42):
+        self.seed = seed
+
     def policy(self, state):
         choices = _movegen.actions(state)
         action = np.empty(1, ACTION_DTYPE)
@@ -59,7 +72,8 @@ class HumanAgent(Agent):
         actions_ = _movegen.actions(state)
         print(
             "\n".join(
-                [f"{idx:<3}: {_utils.actionstr(a)}" for idx, a in enumerate(actions_)]
+                [f"{idx:<3}: {_utils.actionstr(a)}" for idx, a in enumerate(
+                    actions_)]
             )
             + "\n"
         )
@@ -140,9 +154,15 @@ class AlphaBetaAgent(Agent):
         max_value = -np.inf
         for action in _movegen.actions(state):
             new_state = _movegen.step(state, action)
-            value = self.alphabeta(
-                state=new_state, depth=self.depth - 1, maximizing_player=False
+            value = _movegen.alphabeta(
+                state=new_state,
+                depth=self.depth - 1,
+                piece_value=self._piece_value,
+                maximizing_player=False,
             )
+            # value = self.alphabeta(
+            #    state=new_state, depth=self.depth - 1, maximizing_player=False
+            # )
             if value == max_value:
                 best_actions.append(action)
             elif value > max_value:
@@ -168,7 +188,8 @@ class AlphaBetaAgent(Agent):
                 value = -np.inf
                 for action in _movegen.actions(state):
                     new_state = _movegen.step(state, action)
-                    new_value = self.alphabeta(new_state, depth - 1, alpha, beta, False)
+                    new_value = self.alphabeta(
+                        new_state, depth - 1, alpha, beta, False)
                     value = max(value, new_value)
                     alpha = max(alpha, value)
                     if alpha >= beta:
@@ -177,7 +198,8 @@ class AlphaBetaAgent(Agent):
                 value = np.inf
                 for action in _movegen.actions(state):
                     new_state = _movegen.step(state, action)
-                    new_value = self.alphabeta(new_state, depth - 1, alpha, beta, True)
+                    new_value = self.alphabeta(
+                        new_state, depth - 1, alpha, beta, True)
                     value = min(value, new_value)
                     beta = min(beta, value)
                     if alpha >= beta:
@@ -190,3 +212,93 @@ class AlphaBetaAgent(Agent):
             f"depth={self.depth}, "
             f"piece_value={self.piece_value})"
         )
+
+
+def simulate(
+    white_player: Agent,
+    black_player: Agent,
+    color: int = WHITE,
+    board: str = BOARD,
+    verbose: bool = VERBOSE,
+    max_rounds: int = MAX_ROUNDS,
+):
+    state = _utils.init_state(color=color, board=board)
+
+    state_log = np.empty(shape=(max_rounds,), dtype=STATE_DTYPE)
+    action_log = np.empty(shape=(max_rounds,), dtype=ACTION_DTYPE)
+
+    idx = 1
+
+    if verbose:
+        print(LOGO)
+        print("version", __version__)
+        print(f"White player: {white_player}")
+        print(f"Black player: {black_player}")
+        print()
+        print()
+    try:
+        for idx in range(max_rounds):
+            if verbose:
+                print(f"Round {idx + 1}")
+                print(_utils.statestr(state))
+                print()
+
+            if state["color"]:
+                action = white_player.policy(state)
+            else:
+                action = black_player.policy(state)
+
+            state_log[idx] = state
+            action_log[idx] = action
+
+            state = _movegen.step(state, action)
+
+            if verbose:
+                if state["white_checkmate"]:
+                    print(_utils.statestr(state))
+                    print()
+                    print("White won!")
+                    break
+
+                if state["black_checkmate"]:
+                    print(_utils.statestr(state))
+                    print()
+                    print("Black won!")
+                    break
+
+                if state["draw"]:
+                    print(_utils.statestr(state))
+                    print()
+                    print("Draw!")
+                    break
+
+    except KeyboardInterrupt:
+        if verbose:
+            print()
+            print()
+            print("Game stopped")
+
+    state_log = state_log[: idx + 1]
+    action_log = action_log[: idx + 1]
+
+    return state_log, action_log
+
+
+simulate.__doc__ = f"""Simulate a chess game between two agents.
+
+Args:
+    white_player (Agent): The agent playing a the white player.
+    black_player (Agent): The agent playing a the black player.
+    color (int): The color that is currently playing encoded as an integer
+        where white={WHITE} and black={BLACK}. Default is white={WHITE}.
+    board (str): The board set as a unicode string. Default is {BOARD}
+    verbose (bool): Should the game be printed to stdout. Default is {VERBOSE}.
+    max_rounds (int): Maximum number of rounds before the game is terminated.
+        Default is {MAX_ROUNDS}.
+
+Returns:
+    tuple[NDArray, NDArray]: A with two numpy structured
+        arrays containing the state and action log. The state log
+        contains the states that was visited during the game and the
+        action log contains the action that each agent selected.
+"""

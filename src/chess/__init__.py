@@ -1,6 +1,6 @@
 from ._movegen import pseudo_actions, actions, step
 from . import agent
-from .__main__ import simulate
+from chess._version import __version__
 
-__version__ = "0.2.0"
-__all__ = ["pseudo_actions", "actions", "step", "agent", "simulate"]
+__version__ = __version__
+__all__ = ["pseudo_actions", "actions", "step", "agent"]

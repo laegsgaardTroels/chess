@@ -1,7 +1,7 @@
 import numpy as np
 from chess._constants import (
-    STARTING_BOARD,
     WHITE,
+    BOARD,
     NO_CASTLING,
     STATE_DTYPE,
     PIECE_STRS,
@@ -10,7 +10,7 @@ from chess._constants import (
 )
 
 
-def init_state(color=WHITE, board=STARTING_BOARD, castling=NO_CASTLING):
+def init_state(color=WHITE, board=BOARD, castling=NO_CASTLING):
     assert len(board) == 64
     assert len(castling) == 4
     state = np.empty(1, dtype=STATE_DTYPE)
@@ -56,7 +56,7 @@ def statestr(state):
     b = boardstr(state)
     for line, x in enumerate(range(0, 64, 8)):
         line_str = str(8 - line)
-        s = s + line_str + b[x:x + 8] + "\n"
+        s = s + line_str + b[x: x + 8] + "\n"
     s = s + " abcdefgh"
     return s
 

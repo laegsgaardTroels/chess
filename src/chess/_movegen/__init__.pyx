@@ -43,6 +43,9 @@ cdef packed struct State:
     np.npy_bool color
     long[8][8] board
     Castling castling
+    np.npy_bool white_checkmate
+    np.npy_bool black_checkmate
+    np.npy_bool draw
 
 
 cdef packed struct Position:
@@ -209,6 +212,9 @@ def _step_scalar(State state, Action action):
     else:
         state.board[action.src.i][action.src.j] = EMPTY
         state.board[action.dst.i][action.dst.j] = action.piece
+    state.white_checkmate = white_checkmate(state)
+    state.black_checkmate = black_checkmate(state)
+    state.draw = draw(state)
     return state
 
 
@@ -420,3 +426,63 @@ def pawn_pseudo_actions(int n, long piece, Position src, State state, Action [:]
                     actions_view[n] = Action(piece, src, dst, Castling(False, False, False, False), Promotion(False, False, False, False, False))
                     n = n + 1
     return n
+
+
+# terminal 
+
+
+def draw(state):
+    return np.isin(state["board"], [EMPTY, WHITE_KING, BLACK_KING]).all(axis=None)
+
+
+def white_checkmate(state):
+    return False
+
+
+def black_checkmate(state):
+    return False
+
+
+
+# utilities
+
+
+def alphabeta(
+    state,
+    depth,
+    piece_value,
+    alpha=-np.inf,
+    beta=np.inf,
+    maximizing_player=True,
+):
+    """Minimax with alpha-beta pruning."""
+
+    if depth == 0:
+        value = state_value(state, piece_value)
+    else:
+        if maximizing_player:
+            value = -np.inf
+            for action in actions(state):
+                new_state = step(state, action)
+                new_value = alphabeta(new_state, depth - 1, piece_value, alpha, beta, False)
+                value = max(value, new_value)
+                alpha = max(alpha, value)
+                if alpha >= beta:
+                    break
+        else:
+            value = np.inf
+            for action in actions(state):
+                new_state = step(state, action)
+                new_value = alphabeta(new_state, depth - 1, piece_value, alpha, beta, True)
+                value = min(value, new_value)
+                beta = min(beta, value)
+                if alpha >= beta:
+                    break
+    return value
+
+
+def state_value(state, piece_value):
+    total_value = 0
+    for piece, value in piece_value.items():
+        total_value = total_value + np.sum(state["board"] == piece) * value
+    return total_value

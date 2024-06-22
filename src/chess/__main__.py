@@ -1,17 +1,6 @@
 import argparse
-import numpy as np
 from chess import agent
-from chess._utils import init_state, statestr
-from chess import _movegen
-from chess._constants import (
-    STARTING_BOARD,
-    WHITE,
-    BLACK,
-    MAX_ROUNDS,
-    STATE_DTYPE,
-    ACTION_DTYPE,
-    LOGO,
-)
+from chess._constants import BOARD, WHITE, BLACK, MAX_ROUNDS, VERBOSE, COLOR
 
 
 def main() -> None:
@@ -19,107 +8,65 @@ def main() -> None:
         description="Chess engine command line interface.",
     )
     parser.add_argument(
-        "-v", "--verbose",
-        help="Should the game be printed.",
-        action='store_true',
-        default=True,
+        "white_player",
+        help="white_player (Agent): The agent playing a the white player.",
+        type=str,
     )
-    subparsers = parser.add_subparsers(required=True)
-
-    parser_machine_vs_machine = subparsers.add_parser(
-        'machine_vs_machine',
-        help="Let the machine play against itself."
+    parser.add_argument(
+        "black_player",
+        help="black_player (Agent): The agent playing a the black player.",
+        type=str,
     )
-    parser_machine_vs_machine.set_defaults(func=machine_vs_machine)
-
-    parser_human_vs_machine = subparsers.add_parser(
-        'human_vs_machine',
-        help="Play against the machine."
+    parser.add_argument(
+        "-c",
+        "--color",
+        help=(
+            "The color that is currently playing encoded as an integer"
+            f"where white={WHITE} and black={BLACK}. Default is {COLOR}"
+        ),
+        default=COLOR,
+        required=False,
+        type=int,
     )
-    parser_human_vs_machine.set_defaults(func=human_vs_machine)
+    parser.add_argument(
+        "-b",
+        "--board",
+        help=(f"The board set as a unicode string. Default is {BOARD}"),
+        default=BOARD,
+        required=False,
+        type=str,
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help=f"Should the game be printed to stdout. Default is {VERBOSE}.",
+        default=VERBOSE,
+        required=False,
+    )
+    parser.add_argument(
+        "-m",
+        "--max-rounds",
+        help=(
+            "Maximum number of rounds before the game is terminated. "
+            f"Default is {MAX_ROUNDS}."
+        ),
+        default=MAX_ROUNDS,
+        required=False,
+        type=int,
+    )
 
     args = parser.parse_args()
-    args.func(args)
 
-
-def machine_vs_machine(args: argparse.Namespace) -> None:
-    simulate(
-        white_player=agent.AlphaBetaAgent(color=WHITE),
-        black_player=agent.AlphaBetaAgent(color=BLACK),
+    agent.simulate(
+        white_player=agent.parse(args.white_player),
+        black_player=agent.parse(args.black_player),
+        color=args.color,
+        board=args.board,
         verbose=args.verbose,
+        max_rounds=args.max_rounds,
     )
 
 
-def human_vs_machine(args: argparse.Namespace) -> None:
-    simulate(
-        white_player=agent.HumanAgent(color=WHITE),
-        black_player=agent.AlphaBetaAgent(color=BLACK),
-        verbose=args.verbose,
-    )
-
-
-def simulate(
-    white_player: agent.Agent,
-    black_player: agent.Agent,
-    color=WHITE,
-    board: str = STARTING_BOARD,
-    verbose: bool = False,
-    seed: int = 42,
-    max_rounds: int = MAX_ROUNDS,
-):
-    """The main game loop."""
-
-    np.random.seed(seed=seed)
-
-    state = init_state(color=color, board=board)
-
-    state_log = np.empty(shape=(max_rounds,), dtype=STATE_DTYPE)
-    action_log = np.empty(shape=(max_rounds,), dtype=ACTION_DTYPE)
-
-    idx = 1
-
-    if verbose:
-        print(LOGO)
-        print(f"White player: {white_player}")
-        print(f"Black player: {black_player}")
-        print()
-        print()
-    try:
-        for idx in range(max_rounds):
-            if verbose:
-                print(f"Round {idx}")
-                print(statestr(state))
-                print()
-
-            if state["color"]:
-                action = white_player.policy(state)
-            else:
-                action = black_player.policy(state)
-
-            state_log[idx] = state
-            action_log[idx] = action
-
-            state = _movegen.step(state, action)
-
-            if len(_movegen.actions(state)) != 0:
-                continue
-            else:
-                if verbose:
-                    print(statestr(state))
-                    print()
-                    if state["color"]:
-                        print("White won!")
-                    else:
-                        print("Black won!")
-                break
-
-    except KeyboardInterrupt:
-        if verbose:
-            print()
-            print()
-            print("Game stopped")
-
-    state_log = state_log[: idx + 1]
-    action_log = action_log[: idx + 1]
-
-    return state_log, action_log
+if __name__ == "__main__":
+    main()

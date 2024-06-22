@@ -20,7 +20,7 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 
 # A file containing the __version__ variable.
-VERSIONFILE = "src/chess/__init__.py"
+VERSIONFILE = "src/chess/_version.py"
 
 try:
     __version__ = re.search(

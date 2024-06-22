@@ -1,4 +1,4 @@
-STARTING_BOARD = (
+BOARD = (
     "♜♞♝♛♚♝♞♜"
     "♟♟♟♟♟♟♟♟"
     "        "
@@ -64,6 +64,9 @@ STATE_DTYPE = [
         "castling",
         CASTLING_DTYPE,
     ),
+    ("white_checkmate", "?"),
+    ("black_checkmate", "?"),
+    ("draw", "?"),
 ]
 POSITION_DTYPE = [("i", "<i8"), ("j", "<i8")]
 ACTION_DTYPE = [
@@ -101,3 +104,6 @@ REVERSED_NUMBERS = NUMBERS[::-1]  # i
 LETTERS = ["a", "b", "c", "d", "e", "f", "g", "h"]  # j
 BLACK = 0
 WHITE = 1
+SEED = 42
+VERBOSE = False
+COLOR = WHITE

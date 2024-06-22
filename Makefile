@@ -42,3 +42,8 @@ lint:
 		${PYTHON_INTERPRETER} -m flake8 src
 	. venv/bin/activate; \
 		${PYTHON_INTERPRETER} -m flake8 tests
+
+.PHONY: profile
+profile:
+	. venv/bin/activate; \
+		${PYTHON_INTERPRETER} -m cProfile --sort time -m chess "RandomAgent(seed=42)" "RandomAgent(seed=42)"  
