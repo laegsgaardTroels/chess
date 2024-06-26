@@ -7,42 +7,6 @@ from chess import _utils
 from chess._constants import NO_CASTLING, BLACK, WHITE, PIECE_STRS
 
 
-TRANSLATIONTABLE = {
-    "♜": "♖",
-    "♞": "♘",
-    "♝": "♗",
-    "♛": "♕",
-    "♚": "♔",
-    "♟": "♙",
-    "♖": "♜",
-    "♘": "♞",
-    "♗": "♝",
-    "♕": "♛",
-    "♔": "♚",
-    "♙": "♟",
-}
-
-
-def init_state_flipud(color, board, castling):
-    return _utils.init_state(
-        color=not color,
-        board="".join(
-            reversed([board[idx:idx + 8] for idx in range(0, 64, 8)])
-        ).translate(str.maketrans(TRANSLATIONTABLE)),
-        castling=castling[2:4] + castling[0:2],
-    )
-
-
-def init_state_fliplr(color, board, castling):
-    return _utils.init_state(
-        color=color,
-        board="".join(
-            ["".join(reversed(board[idx:idx + 8])) for idx in range(0, 64, 8)]
-        ),
-        castling=castling,
-    )
-
-
 class NumberOfActionsTestData(NamedTuple):
     # Expected number of actions for each piece (default=0)
     expected_number_of_actions: dict[str, int]
@@ -81,6 +45,8 @@ def build_number_of_actions_params(
                     color=testdata.color,
                     board=testdata.board,
                     castling=testdata.castling,
+                    flipud=False,
+                    fliplr=False,
                 ),
                 expected_number_of_actions=testdata.expected_number_of_actions,
             )
@@ -90,13 +56,15 @@ def build_number_of_actions_params(
         if testdata.flipud:
             params.append(
                 NumberOfActionsTestParams(
-                    state=init_state_flipud(
+                    state=_utils.init_state(
                         color=testdata.color,
                         board=testdata.board,
                         castling=testdata.castling,
+                        flipud=True,
+                        fliplr=False,
                     ),
                     expected_number_of_actions={
-                        TRANSLATIONTABLE[k]: v
+                        _utils.TRANSLATIONTABLE[k]: v
                         for k, v in testdata.expected_number_of_actions.items()
                     },
                 )
@@ -106,12 +74,33 @@ def build_number_of_actions_params(
         if testdata.fliplr:
             params.append(
                 NumberOfActionsTestParams(
-                    state=init_state_fliplr(
+                    state=_utils.init_state(
                         color=testdata.color,
                         board=testdata.board,
                         castling=testdata.castling,
+                        flipud=False,
+                        fliplr=True,
                     ),
                     expected_number_of_actions=testdata.expected_number_of_actions,
+                )
+            )
+
+        # Flip up/down (ud) + color
+        # Flip left/right (lr)
+        if testdata.flipud and testdata.fliplr:
+            params.append(
+                NumberOfActionsTestParams(
+                    state=_utils.init_state(
+                        color=testdata.color,
+                        board=testdata.board,
+                        castling=testdata.castling,
+                        flipud=True,
+                        fliplr=True,
+                    ),
+                    expected_number_of_actions={
+                        _utils.TRANSLATIONTABLE[k]: v
+                        for k, v in testdata.expected_number_of_actions.items()
+                    },
                 )
             )
     return params
@@ -289,7 +278,7 @@ def build_number_of_actions_params(
                 castling=(False, False, False, False),
                 expected_number_of_actions={
                     "♔": 5,
-                    "♖": 10,
+                    "♖": 11,
                 },
                 fliplr=False,
             ),
@@ -309,7 +298,49 @@ def build_number_of_actions_params(
                 fliplr=False,
                 expected_number_of_actions={
                     "♔": 5,
-                    "♖": 9,
+                    "♖": 10,
+                },
+            ),
+            NumberOfActionsTestData(
+                color=WHITE,
+                board=(
+                    "♜♞♝♛♚♝♞♜"
+                    "♟♟♟♟♟♟♟♟"
+                    "        "
+                    "        "
+                    "        "
+                    "        "
+                    "♙♙♙♙♙♙♙♙"
+                    "♖♘♗♕♔  ♖"
+                ),
+                castling=(False, False, False, False),
+                fliplr=False,
+                expected_number_of_actions={
+                    "♖": 3,
+                    "♘": 2,
+                    "♙": 16,
+                    "♔": 1,
+                },
+            ),
+            NumberOfActionsTestData(
+                color=WHITE,
+                board=(
+                    "♜♞♝♛♚♝♞♜"
+                    "♟♟♟♟♟♟♟♟"
+                    "        "
+                    "        "
+                    "        "
+                    "        "
+                    "♙♙♙♙♙♙♙♙"
+                    "♖   ♔♗♘♖"
+                ),
+                castling=(False, False, False, False),
+                fliplr=False,
+                expected_number_of_actions={
+                    "♖": 4,
+                    "♘": 2,
+                    "♙": 16,
+                    "♔": 1,
                 },
             ),
             NumberOfActionsTestData(
@@ -628,7 +659,7 @@ def test_expected_number_of_pseudo_actions(state, expected_number_of_actions):
         expected = expected_number_of_actions.get(piece_str, 0)
         assert (
             actual == expected
-        ), f"\n{_utils.statestr(state)}\n{str(actions[actions['piece'] == piece])}"
+        ), f"\n{piece_str=}\n{_utils.statestr(state)}\n{str(actions[actions['piece'] == piece])}"
 
 
 @pytest.mark.parametrize(
@@ -721,9 +752,7 @@ def test_expected_number_of_actions(state, expected_number_of_actions):
     for piece, piece_str in PIECE_STRS.items():
         actual = np.sum(actions["piece"] == piece)
         expected = expected_number_of_actions.get(piece_str, 0)
-        assert (
-            actual == expected
-        ), (
+        assert actual == expected, (
             f"\npiece={PIECE_STRS[piece]}"
             f"\n{_utils.statestr(state)}\n{str(actions[actions['piece'] == piece])}"
         )

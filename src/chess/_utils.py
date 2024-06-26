@@ -10,9 +10,39 @@ from chess._constants import (
 )
 
 
-def init_state(color=WHITE, board=BOARD, castling=NO_CASTLING):
+TRANSLATIONTABLE = {
+    "♜": "♖",
+    "♞": "♘",
+    "♝": "♗",
+    "♛": "♕",
+    "♚": "♔",
+    "♟": "♙",
+    "♖": "♜",
+    "♘": "♞",
+    "♗": "♝",
+    "♕": "♛",
+    "♔": "♚",
+    "♙": "♟",
+}
+
+
+def init_state(
+    color=WHITE, board=BOARD, castling=NO_CASTLING, flipud=False, fliplr=False
+):
     assert len(board) == 64
     assert len(castling) == 4
+    if flipud:
+        color = not color
+        board = "".join(
+            reversed([board[idx: idx + 8] for idx in range(0, 64, 8)])
+        ).translate(str.maketrans(TRANSLATIONTABLE))
+        castling = castling[2:4] + castling[0:2]
+    if fliplr:
+        color = color
+        board = "".join(
+            ["".join(reversed(board[idx: idx + 8])) for idx in range(0, 64, 8)]
+        )
+
     state = np.empty(1, dtype=STATE_DTYPE)
     state[0]["board"] = 0
     state[0]["color"] = bool(color)
