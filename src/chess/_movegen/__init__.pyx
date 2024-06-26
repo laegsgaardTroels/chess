@@ -105,9 +105,9 @@ def _step(State state, Action [:] action):
 def _pseudo_actions(State state):
     cdef np.ndarray[Action, ndim=1] actions = np.empty(100000, dtype=ACTION_DTYPE)
     cdef Action [:] actions_view = actions
-    cdef int n
+    cdef int n = 0
     cdef long i,j
-    n = 0
+
     for i in range(8):
         for j in range(8):
             src = Position(i, j)
@@ -141,6 +141,16 @@ def _pseudo_actions(State state):
                     n = pawn_pseudo_actions(n, BLACK_PAWN, src, state, actions_view)
             else:
                 raise NotImplementedError()
+
+    if state.color == WHITE:
+        n = white_castling_queenside(n, WHITE_ROOK, src, state, actions_view)
+        n = white_castling_kingside(n, WHITE_ROOK, src, state, actions_view)
+    elif state.color == BLACK:
+        n = black_castling_queenside(n, BLACK_ROOK, src, state, actions_view)
+        n = black_castling_kingside(n, BLACK_ROOK, src, state, actions_view)
+    else:
+        raise NotImplementedError()
+
     return actions[:n]
 
 
@@ -242,52 +252,79 @@ def enemy_piece_at_dst(State state, Position dst):
         return board >= 7
 
 
+def black_castling_queenside(int n, long piece, Position src, State state, Action [:] actions_view):
+    if (
+        state.color == BLACK
+        and state.board[0][0] == BLACK_ROOK
+        and state.board[0][1] == EMPTY
+        and state.board[0][2] == EMPTY
+        and state.board[0][3] == EMPTY
+        and state.board[0][4] == BLACK_KING
+        and not state.castling.left_black
+    ):
+        actions_view[n] = Action(piece, src, src, Castling(True, False, False, False), Promotion(False, False, False, False, False))
+        n = n + 1
+    return n
+
+
+def black_castling_kingside(int n, long piece, Position src, State state, Action [:] actions_view):
+    if (
+        state.color == BLACK
+        and state.board[0][4] == BLACK_KING
+        and state.board[0][5] == EMPTY
+        and state.board[0][6] == EMPTY
+        and state.board[0][7] == BLACK_ROOK
+        and not state.castling.left_black
+    ):
+        actions_view[n] = Action(piece, src, src, Castling(False, True, False, False), Promotion(False, False, False, False, False))
+        n = n + 1
+    return n
+
+
+def white_castling_queenside(int n, long piece, Position src, State state, Action [:] actions_view):
+    if (
+        state.color == WHITE
+        and state.board[7][0] == WHITE_ROOK
+        and state.board[7][1] == EMPTY
+        and state.board[7][2] == EMPTY
+        and state.board[7][3] == EMPTY
+        and state.board[7][4] == WHITE_KING
+        and not state.castling.left_black
+    ):
+        actions_view[n] = Action(piece, src, src, Castling(False, False, True, False), Promotion(False, False, False, False, False))
+        n = n + 1
+    return n
+
+
+def white_castling_kingside(int n, long piece, Position src, State state, Action [:] actions_view):
+    if (
+        state.color == WHITE
+        and state.board[7][4] == WHITE_KING
+        and state.board[7][5] == EMPTY
+        and state.board[7][6] == EMPTY
+        and state.board[7][7] == WHITE_ROOK
+        and not state.castling.left_black
+    ):
+        actions_view[n] = Action(piece, src, src, Castling(False, False, False, True), Promotion(False, False, False, False, False))
+        n = n + 1
+    return n
+
+
 def rook_pseudo_actions(int n, long piece, Position src, State state, Action [:] actions_view):
     for di, dj in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
         for step in range(1, 8):
             dst = Position(src.i + step * di, src.j + step * dj)
             if outside_board(dst) or own_piece_at_dst(state, dst):
                 break
-            if not state.board[dst.i][dst.j]:
-                if (
-                    src.i == 0
-                    and piece == BLACK_ROOK
-                    and dj == 1
-                    and step == 3
-                    and not state.castling.left_black
-                ):
-                    actions_view[n] = Action(piece, src, dst, Castling(True, False, False, False), Promotion(False, False, False, False, False))
-                elif (
-                    src.i == 0
-                    and piece == BLACK_ROOK
-                    and dj == -1
-                    and step == 2
-                    and not state.castling.right_black
-                ):
-                    actions_view[n] = Action(piece, src, dst, Castling(False, True, False, False), Promotion(False, False, False, False, False))
-                elif (
-                    src.i == 7
-                    and piece == WHITE_ROOK
-                    and dj == 1
-                    and step == 3
-                    and not state.castling.left_white
-                ):
-                    actions_view[n] = Action(piece, src, dst, Castling(False, False, True, False), Promotion(False, False, False, False, False))
-                elif (
-                    src.i == 7
-                    and piece == WHITE_ROOK
-                    and dj == -1
-                    and step == 2
-                    and not state.castling.right_white
-                ):
-                    actions_view[n] = Action(piece, src, dst, Castling(False, False, False, True), Promotion(False, False, False, False, False))
-                else:
-                    actions_view[n] = Action(piece, src, dst, Castling(False, False, False, False), Promotion(False, False, False, False, False))
+            if state.board[dst.i][dst.j] == EMPTY:
+                actions_view[n] = Action(piece, src, dst, Castling(False, False, False, False), Promotion(False, False, False, False, False))
                 n = n + 1
-            else:
+            elif enemy_piece_at_dst(state, dst):
                 actions_view[n] = Action(piece, src, dst, Castling(False, False, False, False), Promotion(False, False, False, False, False))
                 n = n + 1
                 break
+            else:
+                raise NotImplementedError()
     return n
  
  
