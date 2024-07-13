@@ -251,8 +251,12 @@ cdef Bitboard FILE_D = D1 | D2 | D3 | D4 | D5 | D6 | D7 | D8
 cdef Bitboard FILE_C = C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8
 cdef Bitboard FILE_B = B1 | B2 | B3 | B4 | B5 | B6 | B7 | B8
 cdef Bitboard FILE_A = A1 | A2 | A3 | A4 | A5 | A6 | A7 | A8
+# The magic lookups are taken from the very awesome GunshipPenguin/shallow-blue Github project.
+# source: 
+#    https://github.com/GunshipPenguin/shallow-blue/blob/c6d7e9615514a86533a9e0ffddfc96e058fc9cfd/src/attacks.h#L120
+#    https://github.com/GunshipPenguin/shallow-blue/blob/c6d7e9615514a86533a9e0ffddfc96e058fc9cfd/src/attacks.h#L136
+# For a nice explanation one can read.
 # Reference: https://rhysre.net/fast-chess-move-generation-with-magic-bitboards.html
-# Source: https://github.com/GunshipPenguin/shallow-blue/blob/c6d7e9615514a86533a9e0ffddfc96e058fc9cfd/src/attacks.h#L120
 cdef Bitboard[64] MAGIC_ROOK = [
     0xa8002c000108020, 0x6c00049b0002001, 0x100200010090040, 0x2480041000800801, 0x280028004000800,
     0x900410008040022, 0x280020001001080, 0x2880002041000080, 0xa000800080400034, 0x4808020004000,
@@ -268,8 +272,6 @@ cdef Bitboard[64] MAGIC_ROOK = [
     0x2000009044210200, 0x4080008040102101, 0x40002080411d01, 0x2005524060000901, 0x502001008400422,
     0x489a000810200402, 0x1004400080a13, 0x4000011008020084, 0x26002114058042
 ]
-# Reference: https://rhysre.net/fast-chess-move-generation-with-magic-bitboards.html
-# Source: https://github.com/GunshipPenguin/shallow-blue/blob/c6d7e9615514a86533a9e0ffddfc96e058fc9cfd/src/attacks.h#L136
 cdef Bitboard[64] MAGIC_BISHOP = [
     0x89a1121896040240, 0x2004844802002010, 0x2068080051921000, 0x62880a0220200808, 0x4042004000000,
     0x100822020200011, 0xc00444222012000a, 0x28808801216001, 0x400492088408100, 0x201c401040c0084,
