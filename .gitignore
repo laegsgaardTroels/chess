@@ -130,3 +130,9 @@ dmypy.json
 
 # Conda environments
 envs/
+
+# Prototypes
+prototypes/
+
+# Ignore cpp from cython
+*.cpp

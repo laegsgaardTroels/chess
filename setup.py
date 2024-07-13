@@ -5,9 +5,9 @@ from setuptools import setup, find_packages, Extension
 from Cython.Build import cythonize
 
 ext = Extension(
-    "chess._movegen",
+    "chess._environment",
     sources=[
-        "src/chess/_movegen/__init__.pyx",
+        "src/chess/_environment.pyx",
     ],
     include_dirs=[np.get_include()],
     language="c++",

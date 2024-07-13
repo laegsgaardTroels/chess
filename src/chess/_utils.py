@@ -1,12 +1,16 @@
 import numpy as np
-from chess._constants import (
+from ._environment import bb_to_ij, ActionFlag
+from ._constants import (
+    EMPTY,
     WHITE,
-    BOARD,
-    NO_CASTLING,
+    BLACK,
     STATE_DTYPE,
+    PIECE_NAMES,
     PIECE_STRS,
+    BOARD,
     LETTERS,
     REVERSED_NUMBERS,
+    MAX_PLY,
 )
 
 
@@ -26,95 +30,228 @@ TRANSLATIONTABLE = {
 }
 
 
-def init_state(
-    color=WHITE, board=BOARD, castling=NO_CASTLING, flipud=False, fliplr=False
-):
-    assert len(board) == 64
-    assert len(castling) == 4
-    if flipud:
-        color = not color
-        board = "".join(
-            reversed([board[idx: idx + 8] for idx in range(0, 64, 8)])
-        ).translate(str.maketrans(TRANSLATIONTABLE))
-        castling = castling[2:4] + castling[0:2]
-    if fliplr:
-        color = color
-        board = "".join(
-            ["".join(reversed(board[idx: idx + 8])) for idx in range(0, 64, 8)]
-        )
+def board_flipud(board: str):
+    idxs = np.flipud(np.arange(64).reshape(8, 8)).flatten()
+    return "".join([board[idx] for idx in idxs])
 
-    state = np.empty(1, dtype=STATE_DTYPE)
-    state[0]["board"] = 0
-    state[0]["color"] = bool(color)
-    state[0]["castling"] = castling
-    for entry_idx, entry in enumerate(board):
-        i = entry_idx // 8
-        j = entry_idx % 8
-        for piece_idx, piece_str in enumerate(PIECE_STRS.values(), 1):
+
+def board_fliplr(board: str):
+    idxs = np.fliplr(np.arange(64).reshape(8, 8)).flatten()
+    return "".join([board[idx] for idx in idxs])
+
+
+def board_rot90(board: str, k: int = 1):
+    idxs = np.rot90(np.arange(64).reshape(8, 8), k=k).flatten()
+    return "".join([board[idx] for idx in idxs])
+
+
+def board_swapcolor(board: str):
+    return board.translate(str.maketrans(TRANSLATIONTABLE))
+
+
+def state_init(color: int = WHITE, board: str = BOARD, **kwargs):
+    assert color in set([WHITE, BLACK])
+    assert len(board) == 64
+    state = np.zeros(shape=(1,), dtype=STATE_DTYPE)
+    for piece_name in PIECE_NAMES:
+        state[0][piece_name] = 0
+    state["white_player_turn"] = color
+    state["ply"] = 0
+    for key, value in kwargs.items():
+        state[key] = value
+    cursor = 1
+    for entry in board:
+        for piece_name, piece_str in zip(PIECE_NAMES, PIECE_STRS):
             if entry == piece_str:
-                state[0]["board"][i, j] = piece_idx
-    assert state[0]["board"].shape == (8, 8)
+                state[0][piece_name] |= np.uint64(cursor)
+                break
+        cursor = cursor << 1
     return state
 
 
-def boardstr(state):
-    assert state[0]["board"].shape == (8, 8), f"{state[0]['board']=}"
+def state_str(state, with_ply=False):
+    if isinstance(state, np.ndarray):
+        state = state[0]
     s = ""
-    for i in range(8):
-        for j in range(8):
-            for piece_idx, piece_str in enumerate(PIECE_STRS.values(), 1):
-                try:
-                    if state[0]["board"][i, j] == piece_idx:
-                        s = s + piece_str
-                        break
-                except Exception as exec:
-                    raise ValueError(
-                        f"Something went wrong {state['board']=}, "
-                        f"{i=}, {j=} {state['board'][i, j]=}"
-                    ) from exec
+    if with_ply:
+        s = s + f"Ply: {int(state['ply'])}\n"
+    if state["white_player_turn"]:
+        s = s + "Player: White\n"
+    else:
+        s = s + "Player: Black\n"
+    cursor = 1
+    for _, number in zip(range(8), REVERSED_NUMBERS):  # i
+        s = s + str(number)
+        for _ in range(8):  # j
+            for piece_name, piece_str in zip(PIECE_NAMES, PIECE_STRS):
+                if state[piece_name] & np.uint64(cursor):
+                    s = s + piece_str
+                    break
             else:
                 s = s + " "
+            cursor = cursor << 1
+        s = s + "\n"
+    s = s + " " + "".join(LETTERS)
     return s
 
 
-def statestr(state):
+def bitboard_str(bb):
+    bb = int(bb)
+    cursor = int(1)
     s = ""
-    if state["color"]:
-        s = s + "Color: White\n"
-    else:
-        s = s + "Color: Black\n"
-    b = boardstr(state)
-    for line, x in enumerate(range(0, 64, 8)):
-        line_str = str(8 - line)
-        s = s + line_str + b[x: x + 8] + "\n"
-    s = s + " abcdefgh"
+    for _ in range(8):  # i
+        for _ in range(8):  # j
+            if cursor & bb:
+                s = s + "1"
+            else:
+                s = s + "0"
+            cursor = cursor << 1
+        s += "\n"
     return s
 
 
-def actionstr(action):
-    if action["castling"]["left_black"]:
-        return PIECE_STRS[action["piece"]] + " " + "castling left"
-    elif action["castling"]["right_black"]:
-        return PIECE_STRS[action["piece"]] + " " + "castling right"
-    elif action["castling"]["left_white"]:
-        return PIECE_STRS[action["piece"]] + " " + "castling left"
-    elif action["castling"]["right_white"]:
-        return PIECE_STRS[action["piece"]] + " " + "castling right"
-    elif action["promotion"]["rook"]:
-        return PIECE_STRS[action["piece"]] + " " + "promotion rook"
-    elif action["promotion"]["knight"]:
-        return PIECE_STRS[action["piece"]] + " " + "promotion knight"
-    elif action["promotion"]["bishop"]:
-        return PIECE_STRS[action["piece"]] + " " + "promotion bishop"
-    elif action["promotion"]["queen"]:
-        return PIECE_STRS[action["piece"]] + " " + "promotion queen"
-    elif action["promotion"]["pawn"]:
-        return PIECE_STRS[action["piece"]] + " " + "promotion pawn"
+def print_bitboard(*bbs):
+    for bb in bbs:
+        print()
+        print(bitboard_str(bb))
+
+
+def simulate_random_game(env, verbose=False):
+    state = state_init(
+        board=(
+            "♜♞♝♛♚♝♞♜"
+            "♟♟♟♟♟♟♟♟"
+            "        "
+            "        "
+            "        "
+            "        "
+            "♙♙♙♙♙♙♙♙"
+            "♖♘♗♕♔♗♘♖"
+        )
+    )
+    ply = 0
+    for ply in range(MAX_PLY + 1):
+        choices = env.actions(state)
+        assert len(choices) > 0, f"\n{state_str(state)}"
+        state = env.step(state, np.random.choice(choices))
+        if verbose:
+            print(state_str(state))
+        if (
+            state["is_black_checkmate"]
+            or state["is_white_checkmate"]
+            or state["is_draw"]
+        ):
+            break
+    assert (
+        state["is_black_checkmate"] or state["is_white_checkmate"] or state["is_draw"]
+    )
+    assert state["ply"] <= MAX_PLY
+    return ply + 1
+
+
+def all_invariants(testdata):
+    """Invariant under 90 degree rotation of the board and swap of color for each rotation."""
+    return [
+        (color_transform(color), board_transform(board), expected_n_actions)
+        for color_transform, board_transform in [
+            *[
+                (lambda x: x, board_transform)
+                for board_transform in [
+                    lambda x: x,
+                    lambda x: board_rot90(x, k=1),
+                    lambda x: board_rot90(x, k=2),
+                    lambda x: board_rot90(x, k=3),
+                ]
+            ],
+            *[
+                (lambda x: WHITE if x == BLACK else BLACK, board_transform)
+                for board_transform in [
+                    lambda x: board_swapcolor(x),
+                    lambda x: board_rot90(board_swapcolor(x), k=1),
+                    lambda x: board_rot90(board_swapcolor(x), k=2),
+                    lambda x: board_rot90(board_swapcolor(x), k=3),
+                ]
+            ],
+        ]
+        for color, board, expected_n_actions in testdata
+    ]
+
+
+def flipud_invariant(testdata):
+    """Invariant under up/down flip of the board if one swaps the color during a flip."""
+    return [
+        (color_transform(color), board_transform(board), expected_n_actions)
+        for color_transform, board_transform in [
+            (lambda x: x, lambda x: x),
+            (
+                lambda x: WHITE if x == BLACK else BLACK,
+                lambda x: board_flipud(board_swapcolor(x)),
+            ),
+        ]
+        for color, board, expected_n_actions in testdata
+    ]
+
+
+def actionstr(action) -> str:  # noqa
+    if action["src"] != EMPTY:
+        src_i, src_j = bb_to_ij(action["src"])
+        dst_i, dst_j = bb_to_ij(action["dst"])
+        src_str = LETTERS[src_j] + str(REVERSED_NUMBERS[src_i])
+        dst_str = LETTERS[dst_j] + str(REVERSED_NUMBERS[dst_i])
+        from_to_str = src_str + " -> " + dst_str
+        if action["action_flag"] == ActionFlag.move_black_rook:
+            return "♜ " + from_to_str
+        elif action["action_flag"] == ActionFlag.move_black_knight:
+            return "♞ " + from_to_str
+        elif action["action_flag"] == ActionFlag.move_black_bishop:
+            return "♝ " + from_to_str
+        elif action["action_flag"] == ActionFlag.move_black_queen:
+            return "♛ " + from_to_str
+        elif action["action_flag"] == ActionFlag.move_black_king:
+            return "♚ " + from_to_str
+        elif action["action_flag"] == ActionFlag.move_black_pawn:
+            return "♟ " + from_to_str
+        elif action["action_flag"] == ActionFlag.move_white_rook:
+            return "♖ " + from_to_str
+        elif action["action_flag"] == ActionFlag.move_white_knight:
+            return "♘ " + from_to_str
+        elif action["action_flag"] == ActionFlag.move_white_bishop:
+            return "♗ " + from_to_str
+        elif action["action_flag"] == ActionFlag.move_white_queen:
+            return "♕ " + from_to_str
+        elif action["action_flag"] == ActionFlag.move_white_king:
+            return "♔ " + from_to_str
+        elif action["action_flag"] == ActionFlag.move_white_pawn:
+            return "♙ " + from_to_str
+        elif action["action_flag"] == ActionFlag.promote_black_rook:
+            return "♟ " + from_to_str + " promote to ♜"
+        elif action["action_flag"] == ActionFlag.promote_black_knight:
+            return "♟ " + from_to_str + " promote to ♞"
+        elif action["action_flag"] == ActionFlag.promote_black_bishop:
+            return "♟ " + from_to_str + " promote to ♝"
+        elif action["action_flag"] == ActionFlag.promote_black_queen:
+            return "♟ " + from_to_str + " promote to ♛"
+        elif action["action_flag"] == ActionFlag.promote_black_pawn:
+            return "♟ " + from_to_str + " promote to ♟"
+        elif action["action_flag"] == ActionFlag.promote_white_rook:
+            return "♙ " + from_to_str + " promote to ♖"
+        elif action["action_flag"] == ActionFlag.promote_white_knight:
+            return "♙ " + from_to_str + " promote to ♘"
+        elif action["action_flag"] == ActionFlag.promote_white_bishop:
+            return "♙ " + from_to_str + " promote to ♗"
+        elif action["action_flag"] == ActionFlag.promote_white_queen:
+            return "♙ " + from_to_str + " promote to ♕"
+        elif action["action_flag"] == ActionFlag.promote_white_pawn:
+            return "♙ " + from_to_str + " promote to ♙"
+        else:
+            raise NotImplementedError()
+    elif action["action_flag"] == ActionFlag.castle_queenside_black:
+        return "♜ castle queenside"
+    elif action["action_flag"] == ActionFlag.castle_kingside_black:
+        return "♜ castle kingside"
+    elif action["action_flag"] == ActionFlag.castle_queenside_white:
+        return "♖ castle queenside"
+    elif action["action_flag"] == ActionFlag.castle_kingside_white:
+        return "♖ castle kingside"
     else:
-        src_str = LETTERS[action["src"]["j"]] + str(
-            REVERSED_NUMBERS[action["src"]["i"]]
-        )
-        dst_str = LETTERS[action["dst"]["j"]] + str(
-            REVERSED_NUMBERS[action["dst"]["i"]]
-        )
-        return PIECE_STRS[action["piece"]] + " " + src_str + " -> " + dst_str
+        raise NotImplementedError()

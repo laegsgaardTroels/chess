@@ -3,6 +3,9 @@ PYTHON_MAJOR_VERSION := $(word 1,$(PYTHON_VERSION))
 PYTHON_MINOR_VERSION := $(word 2,$(PYTHON_VERSION))
 PYTHON_INTERPRETER := python
 
+
+all: venv 
+
 .PHONY: compile
 compile:
 	. venv/bin/activate; \
@@ -46,4 +49,14 @@ lint:
 .PHONY: profile
 profile:
 	. venv/bin/activate; \
-		${PYTHON_INTERPRETER} -m cProfile --sort time -m chess "RandomAgent(seed=42)" "RandomAgent(seed=42)"  
+		${PYTHON_INTERPRETER} -m cProfile --sort time -m chess "RandomAgent(seed=42)" "RandomAgent(seed=42)"
+
+.PHONY: play_human_vs_machine
+play_human_vs_machine:
+	. venv/bin/activate; \
+		chess -v "HumanAgent()" "AlphaBetaAgent(depth=3)"
+
+.PHONY: play_machine_vs_machine
+play_machine_vs_machine:
+	. venv/bin/activate; \
+		chess -v "AlphaBetaAgent(depth=3)" "AlphaBetaAgent(depth=3)"

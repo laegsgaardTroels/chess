@@ -1,8 +1,0 @@
-- [x] Change `Agent` to ABC class
-- [x] Add `HumanAgent`
-- [x] Add `AlphaBetaAgent`
-- [ ] Add en passant based on `action_log` and `state_log`
-- [ ] Add test of en passant
-- [x] Add profile (using `cProfile`) make target
-- [x] Cythonize `actions()` function
-- [x] Cythonize `step()` function

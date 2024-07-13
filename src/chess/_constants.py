@@ -9,18 +9,18 @@ BOARD = (
     "♖♘♗♕♔♗♘♖"
 )
 EMPTY = 0
-BLACK_ROOK = 1
-BLACK_KNIGHT = 2
-BLACK_BISHOP = 3
-BLACK_QUEEN = 4
-BLACK_KING = 5
-BLACK_PAWN = 6
-WHITE_ROOK = 7
-WHITE_KNIGHT = 8
-WHITE_BISHOP = 9
-WHITE_QUEEN = 10
-WHITE_KING = 11
-WHITE_PAWN = 12
+BLACK_ROOK = 0
+BLACK_KNIGHT = 1
+BLACK_BISHOP = 2
+BLACK_QUEEN = 3
+BLACK_KING = 4
+BLACK_PAWN = 5
+WHITE_ROOK = 6
+WHITE_KNIGHT = 7
+WHITE_BISHOP = 8
+WHITE_QUEEN = 9
+WHITE_KING = 10
+WHITE_PAWN = 11
 PIECES = [
     BLACK_ROOK,
     BLACK_KNIGHT,
@@ -35,58 +35,65 @@ PIECES = [
     WHITE_KING,
     WHITE_PAWN,
 ]
-PIECE_STRS = {
-    BLACK_ROOK: "♜",
-    BLACK_KNIGHT: "♞",
-    BLACK_BISHOP: "♝",
-    BLACK_QUEEN: "♛",
-    BLACK_KING: "♚",
-    BLACK_PAWN: "♟",
-    WHITE_ROOK: "♖",
-    WHITE_KNIGHT: "♘",
-    WHITE_BISHOP: "♗",
-    WHITE_QUEEN: "♕",
-    WHITE_KING: "♔",
-    WHITE_PAWN: "♙",
-}
-NO_CASTLING = (False, False, False, False)
-NO_PROMOTION = (False, False, False, False, False)
-CASTLING_DTYPE = [
-    ("left_black", "?"),
-    ("right_black", "?"),
-    ("left_white", "?"),
-    ("right_white", "?"),
+PIECE_NAMES = [
+    "black_rook",
+    "black_knight",
+    "black_bishop",
+    "black_queen",
+    "black_king",
+    "black_pawn",
+    "white_rook",
+    "white_knight",
+    "white_bishop",
+    "white_queen",
+    "white_king",
+    "white_pawn",
+]
+PIECE_STRS = [
+    "♜",
+    "♞",
+    "♝",
+    "♛",
+    "♚",
+    "♟",
+    "♖",
+    "♘",
+    "♗",
+    "♕",
+    "♔",
+    "♙",
 ]
 STATE_DTYPE = [
-    ("color", "?"),
-    ("board", "<i8", (8, 8)),
-    (
-        "castling",
-        CASTLING_DTYPE,
-    ),
-    ("white_checkmate", "?"),
-    ("black_checkmate", "?"),
-    ("draw", "?"),
+    ("white_player_turn", "?"),
+    ("black_rook", "<u8"),
+    ("black_knight", "<u8"),
+    ("black_bishop", "<u8"),
+    ("black_queen", "<u8"),
+    ("black_king", "<u8"),
+    ("black_pawn", "<u8"),
+    ("white_rook", "<u8"),
+    ("white_knight", "<u8"),
+    ("white_bishop", "<u8"),
+    ("white_queen", "<u8"),
+    ("white_king", "<u8"),
+    ("white_pawn", "<u8"),
+    ("has_black_king_moved", "?"),
+    ("has_white_king_moved", "?"),
+    ("has_black_queenside_rook_moved", "?"),
+    ("has_black_kingside_rook_moved", "?"),
+    ("has_white_queenside_rook_moved", "?"),
+    ("has_white_kingside_rook_moved", "?"),
+    ("ply", "<u8"),
+    ("is_white_check", "?"),
+    ("is_black_check", "?"),
+    ("is_white_checkmate", "?"),
+    ("is_black_checkmate", "?"),
+    ("is_draw", "?"),
 ]
-POSITION_DTYPE = [("i", "<i8"), ("j", "<i8")]
 ACTION_DTYPE = [
-    ("piece", "<i8"),
-    ("src", POSITION_DTYPE),
-    ("dst", POSITION_DTYPE),
-    (
-        "castling",
-        CASTLING_DTYPE,
-    ),
-    (
-        "promotion",
-        [
-            ("rook", "?"),
-            ("knight", "?"),
-            ("bishop", "?"),
-            ("queen", "?"),
-            ("pawn", "?"),
-        ],
-    ),
+    ("src", "<u8"),
+    ("dst", "<u8"),
+    ("action_flag", "<i8"),
 ]
 MAX_ROUNDS = 5000
 LOGO = r"""
@@ -107,3 +114,4 @@ WHITE = 1
 SEED = 42
 VERBOSE = False
 COLOR = WHITE
+MAX_PLY = 5000

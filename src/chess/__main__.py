@@ -1,5 +1,5 @@
 import argparse
-from chess import agent
+from chess import _agent
 from chess._constants import BOARD, WHITE, BLACK, MAX_ROUNDS, VERBOSE, COLOR
 
 
@@ -58,9 +58,9 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    agent.simulate(
-        white_player=agent.parse(args.white_player),
-        black_player=agent.parse(args.black_player),
+    _agent.simulate(
+        white_player=_agent.parse(args.white_player),
+        black_player=_agent.parse(args.black_player),
         color=args.color,
         board=args.board,
         verbose=args.verbose,
