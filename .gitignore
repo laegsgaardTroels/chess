@@ -136,3 +136,6 @@ prototypes/
 
 # Ignore cpp from cython
 *.cpp
+
+# Ignore html from cython
+*.html

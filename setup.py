@@ -24,10 +24,12 @@ VERSIONFILE = "src/chess/_version.py"
 
 try:
     __version__ = re.search(
-        r"^__version__ = ['\"]([^'\"]*)['\"]", open(VERSIONFILE, "rt").read(), re.M
+        r"^__version__ = ['\"]([^'\"]*)['\"]", open(VERSIONFILE,
+                                                    "rt").read(), re.M
     ).group(1)
 except Exception as exception:
-    raise RuntimeError(f"Unable to find version string in {VERSIONFILE}") from exception
+    raise RuntimeError(
+        f"Unable to find version string in {VERSIONFILE}") from exception
 
 
 setup(
@@ -58,7 +60,7 @@ setup(
             "sphinx==7.2.6",
         ]
     },
-    ext_modules=cythonize([ext]),
+    ext_modules=cythonize([ext], annotate=True),
     entry_points={
         "console_scripts": [
             "chess = chess.__main__:main",
