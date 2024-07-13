@@ -6,17 +6,24 @@ An implementation of chess using numpy and cython.
 
 ## Installation
 
+git clone the repository and run the default make target for intallation.
+
 ```bash
 git clone git@github.com:laegsgaardTroels/chess.git
 make
 ```
 
-## Gameplay
-
-Help message:
+Make installs the `chess` package in a `venv/`. In below it is assumed the `venv/` is activated.
 
 ```bash
 source venv/bin/activate
+```
+
+## Gameplay
+
+The gameplay is through a cli installed by the chess package. See the help message for documentation:
+
+```bash
 chess -h
 # usage: chess [-h] [-c COLOR] [-b BOARD] [-v] [-m MAX_ROUNDS] white_player black_player
 # 
@@ -48,6 +55,10 @@ Example machine vs machine play:
 ```bash
 chess -v "AlphaBetaAgent(depth=3)" "AlphaBetaAgent(depth=3)"
 ```
+
+## Contributing
+
+Feel free to make a branch with a pull request.
 
 ## Missing Things
 
