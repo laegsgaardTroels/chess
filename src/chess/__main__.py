@@ -5,23 +5,23 @@ from chess._constants import BOARD, WHITE, BLACK, MAX_ROUNDS, VERBOSE, COLOR
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Chess engine command line interface.",
+        description="Chess engine command line interface",
     )
     parser.add_argument(
         "white_player",
-        help="white_player (Agent): The agent playing a the white player.",
+        help="white_player (Agent): The agent playing a the white player",
         type=str,
     )
     parser.add_argument(
         "black_player",
-        help="black_player (Agent): The agent playing a the black player.",
+        help="black_player (Agent): The agent playing a the black player",
         type=str,
     )
     parser.add_argument(
         "-c",
         "--color",
         help=(
-            "The color that is currently playing encoded as an integer"
+            "The color that is currently playing encoded as an integer "
             f"where white={WHITE} and black={BLACK}. Default is {COLOR}"
         ),
         default=COLOR,
@@ -40,7 +40,7 @@ def main() -> None:
         "-v",
         "--verbose",
         action="store_true",
-        help=f"Should the game be printed to stdout. Default is {VERBOSE}.",
+        help=f"Should the game be printed to stdout. Default is {VERBOSE}",
         default=VERBOSE,
         required=False,
     )
@@ -49,7 +49,7 @@ def main() -> None:
         "--max-rounds",
         help=(
             "Maximum number of rounds before the game is terminated. "
-            f"Default is {MAX_ROUNDS}."
+            f"Default is {MAX_ROUNDS}"
         ),
         default=MAX_ROUNDS,
         required=False,
