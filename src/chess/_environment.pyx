@@ -251,12 +251,10 @@ cdef Bitboard FILE_D = D1 | D2 | D3 | D4 | D5 | D6 | D7 | D8
 cdef Bitboard FILE_C = C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8
 cdef Bitboard FILE_B = B1 | B2 | B3 | B4 | B5 | B6 | B7 | B8
 cdef Bitboard FILE_A = A1 | A2 | A3 | A4 | A5 | A6 | A7 | A8
-# The magic lookups are taken from the very awesome GunshipPenguin/shallow-blue Github project.
-# source: 
-#    https://github.com/GunshipPenguin/shallow-blue/blob/c6d7e9615514a86533a9e0ffddfc96e058fc9cfd/src/attacks.h#L120
-#    https://github.com/GunshipPenguin/shallow-blue/blob/c6d7e9615514a86533a9e0ffddfc96e058fc9cfd/src/attacks.h#L136
-# For a nice explanation one can read.
-# Reference: https://rhysre.net/fast-chess-move-generation-with-magic-bitboards.html
+# The magic lookups are taken from the very awesome GunshipPenguin/shallow-blue Github project. See:
+#    MAGIC_ROOK: https://github.com/GunshipPenguin/shallow-blue/blob/c6d7e9615514a86533a9e0ffddfc96e058fc9cfd/src/attacks.h#L120
+#    MAGIC_BISHOP: https://github.com/GunshipPenguin/shallow-blue/blob/c6d7e9615514a86533a9e0ffddfc96e058fc9cfd/src/attacks.h#L136
+# For a nice explanation one can read: https://rhysre.net/fast-chess-move-generation-with-magic-bitboards.html
 cdef Bitboard[64] MAGIC_ROOK = [
     0xa8002c000108020, 0x6c00049b0002001, 0x100200010090040, 0x2480041000800801, 0x280028004000800,
     0x900410008040022, 0x280020001001080, 0x2880002041000080, 0xa000800080400034, 0x4808020004000,
@@ -411,7 +409,7 @@ cdef class Environment:
                 | self.rook_attackset(state.black_rook | state.black_queen, occupied)
                 | self.knight_attackset(state.black_knight)
                 | self.bishop_attackset(state.black_bishop | state.black_queen, occupied)
-                | self.black_pawn_attackset(state.black_pawn, other_color)
+                | self.black_pawn_attackset(state.black_pawn)
             )
             
             self._king_actions(action_vector, state.white_king, color, other_attackset, ActionFlag.move_white_king)
@@ -433,7 +431,7 @@ cdef class Environment:
                 | self.rook_attackset(state.white_rook | state.white_queen, occupied)
                 | self.knight_attackset(state.white_knight)
                 | self.bishop_attackset(state.white_bishop | state.white_queen, occupied)
-                | self.white_pawn_attackset(state.white_pawn, other_color)
+                | self.white_pawn_attackset(state.white_pawn)
             )
     
             self._king_actions(action_vector, state.black_king, color, other_attackset, ActionFlag.move_black_king)
@@ -615,7 +613,7 @@ cdef class Environment:
             self.rook_attackset(state.black_rook | state.black_queen, occupied)
             | self.knight_attackset(state.black_knight)
             | self.bishop_attackset(state.black_bishop | state.black_queen, occupied)
-            | self.black_pawn_attackset(state.black_pawn, other_color)
+            | self.black_pawn_attackset(state.black_pawn)
         )
         if other_attackset & state.white_king:
             return True
@@ -630,7 +628,7 @@ cdef class Environment:
             self.rook_attackset(state.white_rook | state.white_queen, occupied)
             | self.knight_attackset(state.white_knight)
             | self.bishop_attackset(state.white_bishop | state.white_queen, occupied)
-            | self.white_pawn_attackset(state.white_pawn, other_color)
+            | self.white_pawn_attackset(state.white_pawn)
         )
         if other_attackset & state.black_king:
             return True
@@ -838,13 +836,13 @@ cdef class Environment:
         self._rook_actions(action_vector, queen, blockers, color, flag)
         self._bishop_actions(action_vector, queen, blockers, color, flag)
 
-    cdef Bitboard white_pawn_attackset(self, Bitboard pawn, Bitboard other_color):
+    cdef Bitboard white_pawn_attackset(self, Bitboard pawn):
         cdef Bitboard northeastone, northwestone
         northeastone = ((pawn & ~FILE_H) >> 7)
         northwestone = ((pawn & ~FILE_A) >> 9)
         return northwestone | northeastone
     
-    cdef Bitboard black_pawn_attackset(self, Bitboard pawn, Bitboard other_color):
+    cdef Bitboard black_pawn_attackset(self, Bitboard pawn):
         cdef Bitboard southeastone, southwestone
         southeastone = ((pawn & ~FILE_H) << 9)
         southwestone = ((pawn & ~FILE_A) << 7)
@@ -874,7 +872,7 @@ cdef class Environment:
                 action_vector.push_back(Action(src=src, dst=dst, flag=ActionFlag.move_white_pawn))
                 northtwo = northtwo & (northtwo - 1)
     
-            attackset = self.white_pawn_attackset(src, other_color) & other_color
+            attackset = self.white_pawn_attackset(src) & other_color
             while attackset:
                 dst = attackset & -attackset
                 if dst & RANK_8:
@@ -913,7 +911,7 @@ cdef class Environment:
                 action_vector.push_back(Action(src=src, dst=dst, flag=ActionFlag.move_black_pawn))
                 southtwo = southtwo & (southtwo - 1)
     
-            attackset = self.black_pawn_attackset(src, other_color) & other_color
+            attackset = self.black_pawn_attackset(src) & other_color
             while attackset:
                 dst = attackset & -attackset
                 if dst & RANK_1:
