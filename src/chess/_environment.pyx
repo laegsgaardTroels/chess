@@ -39,6 +39,10 @@ cdef packed struct State:
     # A half-move
     Bitboard ply
 
+    # A square with the possibility of en passant
+    Bitboard en_passant_square_black
+    Bitboard en_passant_square_white
+
     cnp.npy_bool is_white_check
     cnp.npy_bool is_black_check
     cnp.npy_bool is_white_checkmate
@@ -66,6 +70,8 @@ cpdef enum ActionFlag:
     move_black_queen
     move_black_king
     move_black_pawn
+    move_black_pawn_double
+    move_black_pawn_en_passant
 
     move_white_rook
     move_white_knight
@@ -73,6 +79,8 @@ cpdef enum ActionFlag:
     move_white_queen
     move_white_king
     move_white_pawn
+    move_white_pawn_double
+    move_white_pawn_en_passant
 
     castle_queenside_black
     castle_kingside_black
@@ -90,7 +98,6 @@ cpdef enum ActionFlag:
     promote_white_bishop
     promote_white_queen
     promote_white_pawn
-
 
 
 STATE_DTYPE = [
@@ -114,6 +121,8 @@ STATE_DTYPE = [
     ("has_white_queenside_rook_moved", "?"),
     ("has_white_kingside_rook_moved", "?"),
     ("ply", "<u8"),
+    ("en_passant_square_black", "<u8"),
+    ("en_passant_square_white", "<u8"),
     ("is_white_check", "?"),
     ("is_black_check", "?"),
     ("is_white_checkmate", "?"),
@@ -338,6 +347,7 @@ def bb_to_ij(bb):
 
 
 cdef class Environment:
+    # A stateless environment with two main public methods: actions(state) and step(state, action).
     cdef readonly cpp_map[Bitboard, Bitboard] _king_attackset_lookup
     cdef readonly cpp_map[Bitboard, Bitboard] _knight_attackset_lookup
     
@@ -417,7 +427,7 @@ cdef class Environment:
             self._rook_actions(action_vector, state.white_rook, occupied, color, ActionFlag.move_white_rook)
             self._bishop_actions(action_vector, state.white_bishop, occupied, color, ActionFlag.move_white_bishop)
             self._queen_actions(action_vector, state.white_queen, occupied, color, ActionFlag.move_white_queen)
-            self._white_pawn_actions(action_vector, state.white_pawn, occupied, other_color)
+            self._white_pawn_actions(action_vector, state.white_pawn, occupied, other_color, state.en_passant_square_white)
             self._white_rook_queenside_castling_actions(action_vector, state.white_rook, state.white_king, occupied, state.has_white_king_moved, state.has_white_queenside_rook_moved)
             self._white_rook_kingside_castling_actions(action_vector, state.white_rook, state.white_king, occupied, state.has_white_king_moved, state.has_white_kingside_rook_moved)
         
@@ -439,7 +449,7 @@ cdef class Environment:
             self._rook_actions(action_vector, state.black_rook, occupied, color, ActionFlag.move_black_rook)
             self._bishop_actions(action_vector, state.black_bishop, occupied, color, ActionFlag.move_black_bishop)
             self._queen_actions(action_vector, state.black_queen, occupied, color, ActionFlag.move_black_queen)
-            self._black_pawn_actions(action_vector, state.black_pawn, occupied, other_color)
+            self._black_pawn_actions(action_vector, state.black_pawn, occupied, other_color, state.en_passant_square_black)
             self._black_rook_queenside_castling_actions(action_vector, state.black_rook, state.black_king, occupied, state.has_black_king_moved, state.has_black_queenside_rook_moved)
             self._black_rook_kingside_castling_actions(action_vector, state.black_rook, state.black_king, occupied, state.has_black_king_moved, state.has_black_kingside_rook_moved)
             
@@ -473,7 +483,10 @@ cdef class Environment:
     
     cdef _step_scalar(self, State state, Action action, cnp.npy_bool _step_ahead):
         
+        # change color
         state.white_player_turn = not state.white_player_turn
+
+        # remove piece at dst 
         state.black_rook = state.black_rook & ~action.dst
         state.black_knight = state.black_knight & ~action.dst
         state.black_bishop = state.black_bishop & ~action.dst
@@ -486,6 +499,10 @@ cdef class Environment:
         state.white_queen = state.white_queen & ~action.dst
         state.white_king = state.white_king & ~action.dst
         state.white_pawn = state.white_pawn & ~action.dst
+        
+        # reset
+        state.en_passant_square_black = EMPTY
+        state.en_passant_square_white = EMPTY
     
         if action.flag == ActionFlag.move_black_rook:
             state.black_rook = state.black_rook & ~action.src | action.dst
@@ -504,6 +521,26 @@ cdef class Environment:
             state.has_black_king_moved = True
         elif action.flag == ActionFlag.move_black_pawn:
             state.black_pawn = state.black_pawn & ~action.src | action.dst
+        elif action.flag == ActionFlag.move_black_pawn_double:
+            state.black_pawn = state.black_pawn & ~action.src | action.dst
+            if action.dst & FILE_A:
+                state.en_passant_square_white = A6
+            elif action.dst & FILE_B:
+                state.en_passant_square_white = B6
+            elif action.dst & FILE_C:
+                state.en_passant_square_white = C6
+            elif action.dst & FILE_D:
+                state.en_passant_square_white = D6
+            elif action.dst & FILE_E:
+                state.en_passant_square_white = E6
+            elif action.dst & FILE_F:
+                state.en_passant_square_white = F6
+            elif action.dst & FILE_G:
+                state.en_passant_square_white = G6
+            elif action.dst & FILE_H:
+                state.en_passant_square_white = H6
+            else:
+                raise NotImplementedError()
         elif action.flag == ActionFlag.move_white_rook:
             state.white_rook = state.white_rook & ~action.src | action.dst
             if action.src & A1:
@@ -521,6 +558,26 @@ cdef class Environment:
             state.has_white_king_moved = True
         elif action.flag == ActionFlag.move_white_pawn:
             state.white_pawn = state.white_pawn & ~action.src | action.dst
+        elif action.flag == ActionFlag.move_white_pawn_double:
+            state.white_pawn = state.white_pawn & ~action.src | action.dst
+            if action.dst & FILE_A:
+                state.en_passant_square_black = A3
+            elif action.dst & FILE_B:
+                state.en_passant_square_black = B3
+            elif action.dst & FILE_C:
+                state.en_passant_square_black = C3
+            elif action.dst & FILE_D:
+                state.en_passant_square_black = D3
+            elif action.dst & FILE_E:
+                state.en_passant_square_black = E3
+            elif action.dst & FILE_F:
+                state.en_passant_square_black = F3
+            elif action.dst & FILE_G:
+                state.en_passant_square_black = G3
+            elif action.dst & FILE_H:
+                state.en_passant_square_black = H3
+            else:
+                raise NotImplementedError()
         elif action.flag == ActionFlag.castle_queenside_black:
             state.black_rook = (state.black_rook & ~A8) | D8
             state.black_king = C8
@@ -571,6 +628,10 @@ cdef class Environment:
         elif action.flag == ActionFlag.promote_white_pawn:
             state.white_pawn = state.white_pawn & ~action.src
             state.white_pawn = state.white_pawn | action.src
+        elif action.flag == ActionFlag.move_black_pawn_en_passant:
+            state.black_pawn = state.black_pawn & ~action.src | action.dst
+        elif action.flag == ActionFlag.move_white_pawn_en_passant:
+            state.white_pawn = state.white_pawn & ~action.src | action.dst
         else:
             raise NotImplementedError()
     
@@ -675,7 +736,12 @@ cdef class Environment:
         return self._king_attackset_lookup[king]
 
     cdef Bitboard knight_attackset(self, Bitboard knight):
-        return self._knight_attackset_lookup[knight]
+        attackset = 0
+        while knight:
+            src = knight & -knight
+            attackset |= self._knight_attackset_lookup[src]
+            knight &= knight - 1
+        return attackset
 
     cpdef Bitboard rook_attackset_slow(self, int i, int j, Bitboard blockers):
         cdef int step
@@ -848,7 +914,7 @@ cdef class Environment:
         southwestone = ((pawn & ~FILE_A) << 7)
         return southwestone | southeastone
     
-    cdef void _white_pawn_actions(self, cpp_vector[Action]& action_vector, Bitboard pawn, Bitboard occupied, Bitboard other_color):
+    cdef void _white_pawn_actions(self, cpp_vector[Action]& action_vector, Bitboard pawn, Bitboard occupied, Bitboard other_color, Bitboard en_passant_square_white):
         cdef Bitboard src, dst, northone, northtwo, attackset
         while pawn:
             src = pawn & -pawn
@@ -869,13 +935,15 @@ cdef class Environment:
             northtwo = (src >> 16) & (~occupied) & RANK_4
             while northtwo:
                 dst = northtwo & -northtwo
-                action_vector.push_back(Action(src=src, dst=dst, flag=ActionFlag.move_white_pawn))
+                action_vector.push_back(Action(src=src, dst=dst, flag=ActionFlag.move_white_pawn_double))
                 northtwo = northtwo & (northtwo - 1)
     
-            attackset = self.white_pawn_attackset(src) & other_color
+            attackset = self.white_pawn_attackset(src) & (other_color | en_passant_square_white)
             while attackset:
                 dst = attackset & -attackset
-                if dst & RANK_8:
+                if dst & en_passant_square_white:
+                    action_vector.push_back(Action(src=src, dst=dst, flag=ActionFlag.move_white_pawn_en_passant))
+                elif dst & RANK_8:
                     action_vector.push_back(Action(src=src, dst=dst, flag=ActionFlag.promote_white_rook))
                     action_vector.push_back(Action(src=src, dst=dst, flag=ActionFlag.promote_white_knight))
                     action_vector.push_back(Action(src=src, dst=dst, flag=ActionFlag.promote_white_bishop))
@@ -887,7 +955,7 @@ cdef class Environment:
     
             pawn = pawn & (pawn - 1)
     
-    cdef void _black_pawn_actions(self, cpp_vector[Action]& action_vector, Bitboard pawn, Bitboard occupied, Bitboard other_color):
+    cdef void _black_pawn_actions(self, cpp_vector[Action]& action_vector, Bitboard pawn, Bitboard occupied, Bitboard other_color, Bitboard en_passant_square_black):
         cdef Bitboard src, dst, southone, southtwo, attackset
         while pawn:
             src = pawn & -pawn
@@ -908,13 +976,15 @@ cdef class Environment:
             southtwo = (src << 16) & (~occupied) & RANK_5
             while southtwo:
                 dst = southtwo & -southtwo
-                action_vector.push_back(Action(src=src, dst=dst, flag=ActionFlag.move_black_pawn))
+                action_vector.push_back(Action(src=src, dst=dst, flag=ActionFlag.move_black_pawn_double))
                 southtwo = southtwo & (southtwo - 1)
     
-            attackset = self.black_pawn_attackset(src) & other_color
+            attackset = self.black_pawn_attackset(src) & (other_color | en_passant_square_black)
             while attackset:
                 dst = attackset & -attackset
-                if dst & RANK_1:
+                if dst & en_passant_square_black:
+                    action_vector.push_back(Action(src=src, dst=dst, flag=ActionFlag.move_black_pawn_en_passant))
+                elif dst & RANK_1:
                     action_vector.push_back(Action(src=src, dst=dst, flag=ActionFlag.promote_black_rook))
                     action_vector.push_back(Action(src=src, dst=dst, flag=ActionFlag.promote_black_knight))
                     action_vector.push_back(Action(src=src, dst=dst, flag=ActionFlag.promote_black_bishop))
@@ -1157,8 +1227,8 @@ cdef class Environment:
 cdef class AlphaBetaSearch:
     cdef Environment _env
 
-    def __init__(self):
-        self._env = Environment()
+    def __init__(self, env):
+        self._env = env
 
     cpdef search(self, State state, int depth, cnp.ndarray[double, ndim=1] piece_value):
         cdef cnp.ndarray[Action, ndim=1] actions = self._env._actions(state)

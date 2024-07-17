@@ -84,6 +84,8 @@ STATE_DTYPE = [
     ("has_white_queenside_rook_moved", "?"),
     ("has_white_kingside_rook_moved", "?"),
     ("ply", "<u8"),
+    ("en_passant_square_black", "<u8"),
+    ("en_passant_square_white", "<u8"),
     ("is_white_check", "?"),
     ("is_black_check", "?"),
     ("is_white_checkmate", "?"),
@@ -95,7 +97,7 @@ ACTION_DTYPE = [
     ("dst", "<u8"),
     ("action_flag", "<i8"),
 ]
-MAX_ROUNDS = 5000
+MAX_ROUNDS = 2048
 LOGO = r"""
 (  ____ \|\     /|(  ____ \(  ____ \(  ____ \
 | (    \/| )   ( || (    \/| (    \/| (    \/
