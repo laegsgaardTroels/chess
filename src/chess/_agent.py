@@ -24,7 +24,8 @@ from chess._constants import (
     STATE_DTYPE,
     ACTION_DTYPE,
 )
-from chess._environment import Environment, AlphaBetaSearch
+from chess import env
+from chess._environment import AlphaBetaSearch
 from chess import _utils
 from chess._version import __version__
 
@@ -49,15 +50,14 @@ def parse(agent: str) -> Agent:
 
 class RandomAgent(Agent):
     def __init__(self, seed: int = 42):
-        self._env = Environment()
+        self._env = env
         self.seed = seed
         np.random.seed(self.seed)
 
     def policy(self, state):
         choices = self._env.actions(state)
-        action = np.empty(1, ACTION_DTYPE)
-        action[:] = np.random.choice(choices)
-        return action
+        assert len(choices) > 0, f"\n{_utils.state_str(state)}"
+        return np.random.choice(choices)
 
     def __repr__(self):
         return f"RandomAgent({self.seed=})"
@@ -65,7 +65,7 @@ class RandomAgent(Agent):
 
 class HumanAgent(Agent):
     def __init__(self):
-        self._env = Environment()
+        self._env = env
 
     def policy(self, state: State) -> Action:
         actions_ = self._env.actions(state)
@@ -100,7 +100,7 @@ class AlphaBetaAgent(Agent):
     ):
         self.depth = depth
         self.piece_value = piece_value
-        self._alpha_beta_search = AlphaBetaSearch()
+        self._alpha_beta_search = AlphaBetaSearch(env=env)
 
     def _piece_value(self, white_player_turn: bool):
         piece_value = np.zeros(shape=12)
@@ -140,10 +140,10 @@ def simulate(
     verbose: bool = VERBOSE,
     max_rounds: int = MAX_ROUNDS,
 ):
-    _env = Environment()
+
     state = _utils.state_init(color=color, board=board)
 
-    state_log = np.empty(shape=(max_rounds,), dtype=STATE_DTYPE)
+    state_log = np.empty(shape=(max_rounds + 1,), dtype=STATE_DTYPE)
     action_log = np.empty(shape=(max_rounds,), dtype=ACTION_DTYPE)
 
     idx = 1
@@ -170,26 +170,39 @@ def simulate(
             state_log[idx] = state
             action_log[idx] = action
 
-            state = _env.step(state, action)
+            state = env.step(state, action)
 
-            if verbose:
-                if state["is_white_checkmate"]:
+            if state["is_white_checkmate"]:
+                state_log[idx + 1] = state
+                if verbose:
                     print(_utils.state_str(state))
                     print()
                     print("Black won!")
-                    break
+                break
 
-                if state["is_black_checkmate"]:
+            if state["is_black_checkmate"]:
+                state_log[idx + 1] = state
+                if verbose:
                     print(_utils.state_str(state))
                     print()
                     print("White won!")
-                    break
+                break
 
-                if state["is_draw"]:
+            if state["is_draw"]:
+                state_log[idx + 1] = state
+                if verbose:
                     print(_utils.state_str(state))
                     print()
                     print("Draw!")
-                    break
+                break
+
+            if verbose:
+                if state["is_black_check"]:
+                    print("Black is check!")
+
+            if verbose:
+                if state["is_white_check"]:
+                    print("White is check!")
 
     except KeyboardInterrupt:
         if verbose:
@@ -197,7 +210,7 @@ def simulate(
             print()
             print("Game stopped")
 
-    state_log = state_log[: idx + 1]
+    state_log = state_log[: idx + 2]
     action_log = action_log[: idx + 1]
 
     return state_log, action_log
