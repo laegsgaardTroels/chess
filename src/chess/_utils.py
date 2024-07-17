@@ -192,7 +192,11 @@ def flipud_invariant(testdata):
     ]
 
 
-def actionstr(action) -> str:  # noqa
+def actions_str(actions) -> str:
+    return "\n".join([f"{idx:<3}: {_action_str(a)}" for idx, a in enumerate(actions)])
+
+
+def _action_str(action) -> str:  # noqa
     if action["src"] != EMPTY:
         src_i, src_j = bb_to_ij(action["src"])
         dst_i, dst_j = bb_to_ij(action["dst"])
@@ -211,6 +215,8 @@ def actionstr(action) -> str:  # noqa
             return "♚ " + from_to_str
         elif action["action_flag"] == ActionFlag.move_black_pawn:
             return "♟ " + from_to_str
+        elif action["action_flag"] == ActionFlag.move_black_pawn_double:
+            return "♟ " + from_to_str
         elif action["action_flag"] == ActionFlag.move_white_rook:
             return "♖ " + from_to_str
         elif action["action_flag"] == ActionFlag.move_white_knight:
@@ -222,6 +228,8 @@ def actionstr(action) -> str:  # noqa
         elif action["action_flag"] == ActionFlag.move_white_king:
             return "♔ " + from_to_str
         elif action["action_flag"] == ActionFlag.move_white_pawn:
+            return "♙ " + from_to_str
+        elif action["action_flag"] == ActionFlag.move_white_pawn_double:
             return "♙ " + from_to_str
         elif action["action_flag"] == ActionFlag.promote_black_rook:
             return "♟ " + from_to_str + " promote to ♜"
@@ -243,6 +251,10 @@ def actionstr(action) -> str:  # noqa
             return "♙ " + from_to_str + " promote to ♕"
         elif action["action_flag"] == ActionFlag.promote_white_pawn:
             return "♙ " + from_to_str + " promote to ♙"
+        elif action["action_flag"] == ActionFlag.move_black_pawn_en_passant:
+            return "♟ " + from_to_str + " en passant"
+        elif action["action_flag"] == ActionFlag.move_white_pawn_en_passant:
+            return "♙ " + from_to_str + " en passant"
         else:
             raise NotImplementedError()
     elif action["action_flag"] == ActionFlag.castle_queenside_black:
