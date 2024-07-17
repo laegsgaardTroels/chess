@@ -68,16 +68,10 @@ class HumanAgent(Agent):
         self._env = env
 
     def policy(self, state: State) -> Action:
-        actions_ = self._env.actions(state)
-        print(
-            "\n".join(
-                [f"{idx:<3}: {_utils.actionstr(a)}" for idx, a in enumerate(
-                    actions_)]
-            )
-            + "\n"
-        )
+        actions = self._env.actions(state)
+        print(_utils.actions_str(actions) + "\n")
         action_idx = int(input("Select action : "))
-        return actions_[action_idx]
+        return actions[action_idx]
 
     def __repr__(self):
         return "HumanAgent()"
