@@ -57,3 +57,8 @@ play_human_vs_machine:
 play_machine_vs_machine:
 	. venv/bin/activate; \
 		chess -v "AlphaBetaAgent(depth=3)" "AlphaBetaAgent(depth=3)"
+
+.PHONY: play_machine_vs_machine_random
+play_machine_vs_machine_random:
+	. venv/bin/activate; \
+		chess -v "RandomAgent()" "RandomAgent()"
