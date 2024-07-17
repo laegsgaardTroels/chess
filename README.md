@@ -62,4 +62,4 @@ Feel free to make a branch with a pull request.
 
 ## Missing Things
 
-The game is a simplifid version of chess. It does not yet support en passant, the threefold repetition and other more complex rules of chess.
+The game is currently a simplifid version of chess. The threefold repetition and other more complex rules of chess. It may still have bugs.
