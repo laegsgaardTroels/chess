@@ -75,13 +75,13 @@ def test_en_passant(
     actions = env.actions(state)
     if en_passant_square_black:
         assert (
-            sum(actions["action_flag"] ==
-                ActionFlag.move_black_pawn_en_passant)
+            sum(actions["action_flag"]
+                == ActionFlag.move_black_pawn_en_passant)
             == n_en_passant_actions
         ), f"\n{actions_str(actions)}"
     else:
         assert (
-            sum(actions["action_flag"] ==
-                ActionFlag.move_white_pawn_en_passant)
+            sum(actions["action_flag"]
+                == ActionFlag.move_white_pawn_en_passant)
             == n_en_passant_actions
         ), f"\n{actions_str(actions)}"
