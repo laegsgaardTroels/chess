@@ -1,9 +1,7 @@
 import pytest
-from chess._environment import Environment
-
-ENV = Environment()
+from chess import env as _env
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def env():
-    return ENV
+    return _env

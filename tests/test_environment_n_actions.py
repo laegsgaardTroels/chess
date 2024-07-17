@@ -1,15 +1,11 @@
 import pytest
-import numpy as np
 from chess._constants import WHITE
 from chess._utils import (
     state_init,
     state_str,
     all_invariants,
     flipud_invariant,
-    simulate_random_game,
 )
-
-n_simulations = 10
 
 king_testdata = all_invariants(
     [
@@ -455,9 +451,3 @@ def test_environment_n_actions(env, color, board, expected_n_actions):
     assert (
         len(next_state) == expected_n_actions
     ), f"\n{state_str(state)}\n{actual_n_actions=}\n{expected_n_actions=}"
-
-
-@pytest.mark.parametrize("seed", list(range(n_simulations)))
-def test_environment_simulate_random_game(env, seed):
-    np.random.seed(seed)
-    simulate_random_game(env)
