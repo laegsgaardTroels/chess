@@ -53,6 +53,11 @@ play_human_vs_machine:
 	. venv/bin/activate; \
 		chess -v "HumanAgent()" "AlphaBetaAgent(depth=3)"
 
+.PHONY: play_human_vs_human
+play_human_vs_human:
+	. venv/bin/activate; \
+		chess -v "HumanAgent()" "HumanAgent()"
+
 .PHONY: play_machine_vs_machine
 play_machine_vs_machine:
 	. venv/bin/activate; \
