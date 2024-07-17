@@ -630,8 +630,10 @@ cdef class Environment:
             state.white_pawn = state.white_pawn | action.src
         elif action.flag == ActionFlag.move_black_pawn_en_passant:
             state.black_pawn = state.black_pawn & ~action.src | action.dst
+            state.white_pawn = state.white_pawn & ~(action.dst >> 8)
         elif action.flag == ActionFlag.move_white_pawn_en_passant:
             state.white_pawn = state.white_pawn & ~action.src | action.dst
+            state.black_pawn = state.black_pawn & ~(action.dst << 8)
         else:
             raise NotImplementedError()
     
