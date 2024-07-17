@@ -126,7 +126,7 @@ class AlphaBetaAgent(Agent):
         return f"AlphaBetaAgent(depth={self.depth}, piece_value={self.piece_value})"
 
 
-def simulate(
+def simulate(  # noqa
     white_player: Agent,
     black_player: Agent,
     color: int = WHITE,
