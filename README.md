@@ -62,4 +62,4 @@ Feel free to make a branch with a pull request.
 
 ## Missing Things
 
-The game is currently a simplifid version of chess. The threefold repetition and other more complex rules of chess. It may still have bugs.
+The game is currently a simplifid version of chess. The threefold repetition rule and other more complex rules of chess are not implemented. It may still have bugs.
