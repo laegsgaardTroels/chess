@@ -3,6 +3,7 @@
 
 An implementation of chess using numpy and cython.
 
+The game is currently a simplified version of chess. The threefold repetition rule and other more complex rules of chess are not implemented. It may still contain small bugs.
 
 ## Installation
 
@@ -59,7 +60,3 @@ chess -v "AlphaBetaAgent(depth=3)" "AlphaBetaAgent(depth=3)"
 ## Contributing
 
 Feel free to make a branch with a pull request.
-
-## Missing Things
-
-The game is currently a simplifid version of chess. The threefold repetition rule and other more complex rules of chess are not implemented. It may still have bugs.
